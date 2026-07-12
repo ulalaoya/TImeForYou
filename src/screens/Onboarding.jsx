@@ -47,6 +47,11 @@ function Welcome({ onRegister, onLogin }) {
       <button className="btn block ghost" onClick={onLogin}>
         כבר נרשמנו — כניסה עם מספר טלפון
       </button>
+      <div className="divider-btn">
+        <button className="link-btn" onClick={() => { window.location.hash = '#/roni'; }}>
+          כניסת רוני 🔑
+        </button>
+      </div>
     </div>
   );
 }
