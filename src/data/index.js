@@ -18,6 +18,7 @@ export const findFamilyByPhone = (...a) => adapter.findFamilyByPhone(...a);
 export const getFamilyById = (...a) => adapter.getFamilyById(...a);
 export const createFamily = (...a) => adapter.createFamily(...a);
 export const updateFamily = (...a) => adapter.updateFamily(...a);
+export const updateFamilyBookings = (...a) => adapter.updateFamilyBookings(...a);
 export const getBookingsInRange = (...a) => adapter.getBookingsInRange(...a);
 export const createBooking = (...a) => adapter.createBooking(...a);
 export const updateBooking = (...a) => adapter.updateBooking(...a);

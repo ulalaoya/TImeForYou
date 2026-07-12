@@ -87,6 +87,17 @@ export async function updateFamily(id, patch) {
   return f;
 }
 
+// עדכון שדות דה-נורמליזציה (שם/אווטאר) על כל תורי המשפחה — כדי שגם תורים קיימים
+// ישקפו את השינוי (למשל אצל רוני ביומן).
+export async function updateFamilyBookings(familyId, patch) {
+  const store = load();
+  for (const b of store.bookings) {
+    if (b.familyId === familyId) Object.assign(b, patch);
+  }
+  save(store);
+  notifyAll();
+}
+
 export async function getBookingsInRange(fromDate, toDate) {
   const store = load();
   return store.bookings

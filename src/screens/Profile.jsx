@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../AppContext.js';
 import { Avatar, Toast, ConfirmDialog } from '../components/common.jsx';
 import { avatarUrl } from '../utils/assets.js';
-import { updateFamily } from '../data/index.js';
+import { updateFamily, updateFamilyBookings } from '../data/index.js';
 
 export default function Profile({ navigate }) {
   const { family, manifest, setIdentity, clearIdentity } = useApp();
@@ -21,6 +21,10 @@ export default function Profile({ navigate }) {
       email: f.email, notes: f.notes, avatarId: f.avatarId,
     };
     await updateFamily(family.id, patch);
+    // אם השם או האווטאר השתנו — לעדכן גם את התורים הקיימים (כדי שיוצגו נכון אצל רוני)
+    if (patch.avatarId !== family.avatarId || patch.childName !== family.childName) {
+      await updateFamilyBookings(family.id, { childName: patch.childName, avatarId: patch.avatarId });
+    }
     setIdentity({ ...family, ...patch });
     setEdit(false);
     show('הפרטים נשמרו 👍');

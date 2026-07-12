@@ -65,6 +65,14 @@ export async function updateFamily(id, patch) {
   return { id, ...patch };
 }
 
+// עדכון שדות דה-נורמליזציה (שם/אווטאר) על כל תורי המשפחה — כדי שגם תורים קיימים
+// ישקפו את השינוי (למשל אצל רוני ביומן).
+export async function updateFamilyBookings(familyId, patch) {
+  const q = query(collection(db, 'bookings'), where('familyId', '==', familyId));
+  const snap = await getDocs(q);
+  await Promise.all(snap.docs.map((d) => updateDoc(d.ref, patch)));
+}
+
 export async function getBookingsInRange(fromDate, toDate) {
   const q = query(
     collection(db, 'bookings'),
