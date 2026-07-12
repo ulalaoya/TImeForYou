@@ -11,12 +11,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const firebaseConfig = {
-  // apiKey: "...",
-  // authDomain: "...",
-  // projectId: "...",
-  // storageBucket: "...",
-  // messagingSenderId: "...",
-  // appId: "...",
+  apiKey: "AIzaSyAZlxF0OJQo7ZITL0rRctAO8uoqqZJvJow",
+  authDomain: "timeforyou-9a43d.firebaseapp.com",
+  projectId: "timeforyou-9a43d",
+  storageBucket: "timeforyou-9a43d.firebasestorage.app",
+  messagingSenderId: "94559723099",
+  appId: "1:94559723099:web:bd2b8d84e642c64bc2297e",
 };
 
 // true אם קיימת הגדרה אמיתית (יש apiKey)
