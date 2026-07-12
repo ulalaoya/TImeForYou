@@ -2,6 +2,9 @@
 // וגם כתצורה במצב ההדגמה המקומי.
 export const DEFAULT_APP_CONFIG = {
   roniPin: '1234',
+  // מספר הוואטסאפ של רוני — לכפתור "עדכנו את רוני". פורמט ישראלי רגיל ('0501234567')
+  // או בינלאומי ('972501234567'). ריק = הכפתור לא יוצג. ניתן לשנות במסמך config/app.
+  roniPhone: '',
   pricePerHourILS: 20,
   regularHours: { start: '08:00', end: '16:00' },
   specialPeriods: [

@@ -8,6 +8,7 @@ import {
   formatDateHe, DAY_NAMES_HE, maxRunFrom, endTimeFor, bookingOccupiedTimes,
 } from '../utils/time.js';
 import { durationLabel, priceFor, shekel } from '../utils/format.js';
+import { bookingWaLink } from '../utils/whatsapp.js';
 
 export default function NewBooking({ navigate }) {
   const { family, config } = useApp();
@@ -88,7 +89,7 @@ export default function NewBooking({ navigate }) {
 
   // ── רינדור ─────────────────────────────────────────────────────────────
   if (step === 'success' && created) {
-    return <Success created={created} config={config} navigate={navigate}
+    return <Success created={created} family={family} config={config} navigate={navigate}
       onAgain={() => { setStep('calendar'); setSelected(null); setCreated(null); }} />;
   }
 
@@ -206,9 +207,10 @@ function Summary({ selected, count, config, busy, onBack, onConfirm }) {
   );
 }
 
-function Success({ created, config, navigate, onAgain }) {
+function Success({ created, family, config, navigate, onAgain }) {
   const d = fromISODate(created.date);
   const end = created.endTime || endTimeFor(created.startTime, created.slotCount);
+  const waLink = bookingWaLink(created, family, config.roniPhone);
   return (
     <div className="screen center-col">
       <div className="success-emoji">🎉</div>
@@ -219,6 +221,11 @@ function Success({ created, config, navigate, onAgain }) {
         <div className="summary-row"><span className="k">משך</span><span className="v">{durationLabel(created.slotCount)}</span></div>
         <div className="price-big">{shekel(created.priceILS)}</div>
       </div>
+      {waLink && (
+        <a className="btn block wa" href={waLink} target="_blank" rel="noopener noreferrer">
+          עדכנו את רוני בוואטסאפ 💬
+        </a>
+      )}
       <button className="btn block heart" onClick={() => navigate('/my-bookings')}>לצפייה בהזמנות שלי</button>
       <div className="divider-btn">
         <button className="link-btn" onClick={onAgain}>הזמנת תור נוסף</button>

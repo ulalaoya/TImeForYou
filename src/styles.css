@@ -134,6 +134,7 @@ p { margin: 0 0 10px; color: var(--text-soft); line-height: 1.55; }
 .btn.warm { background: var(--orange); box-shadow: 0 5px 14px rgba(251, 140, 0, 0.4); }
 .btn.heart { background: var(--heart); box-shadow: 0 5px 14px rgba(236, 64, 122, 0.4); }
 .btn.green { background: var(--green); box-shadow: 0 5px 14px rgba(67, 160, 71, 0.4); }
+.btn.wa { background: #25D366; box-shadow: 0 5px 14px rgba(37, 211, 102, 0.4); text-decoration: none; }
 .btn.ghost {
   background: #fff;
   color: var(--sky-deep);
