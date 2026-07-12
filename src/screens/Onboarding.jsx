@@ -18,7 +18,7 @@ export default function Onboarding() {
 
   return (
     <div className="screen no-nav center-col">
-      <img className="logo-full" src={assetUrl('logo-full.png')} alt="TimeForYou" />
+      <img className="logo-full" src={assetUrl('logo-wordmark.png')} alt="TimeForYou" />
       <div className="slogan" style={{ marginBottom: 18 }}>את רגועה, הם שמחים 💛</div>
 
       {mode === 'welcome' && (

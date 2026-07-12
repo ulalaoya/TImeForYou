@@ -30,7 +30,7 @@ export default function Home({ navigate }) {
 
   return (
     <div className="screen">
-      <img className="logo-full" src={assetUrl('logo-full.png')} alt="TimeForYou" />
+      <img className="logo-full" src={assetUrl('logo-wordmark.png')} alt="TimeForYou" />
 
       <div className="hero-greet">
         <Avatar avatarId={family.avatarId} size={64} ring />

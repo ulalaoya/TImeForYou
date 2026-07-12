@@ -143,6 +143,25 @@ async function main() {
   // Logo
   for (const [name, box] of Object.entries(LOGO)) await cut(name, box);
 
+  // logo-wordmark: the logo WITHOUT the baked-in slogan line (clock+heart+wordmark only),
+  // derived from logo-full by dropping its bottom ~20% (the "את רגועה, הם שמחים" strip).
+  {
+    const fullBuf = await sharp(join(OUT, 'logo-full.png')).toBuffer();
+    const meta = await sharp(fullBuf).metadata();
+    const keep = Math.round(meta.height * 0.80);
+    let wm = await sharp(fullBuf)
+      .extract({ left: 0, top: 0, width: meta.width, height: keep })
+      .toBuffer();
+    try {
+      wm = await sharp(wm).trim({ background: WHITE, threshold: TRIM_THRESHOLD }).toBuffer();
+    } catch { /* keep untrimmed */ }
+    await sharp(wm)
+      .extend({ top: PAD, bottom: PAD, left: PAD, right: PAD, background: WHITE })
+      .flatten({ background: WHITE })
+      .png()
+      .toFile(join(OUT, 'logo-wordmark.png'));
+  }
+
   // Avatars
   const groups = [
     ['baby', AVATARS_BABY],
