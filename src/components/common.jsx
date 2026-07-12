@@ -54,6 +54,11 @@ export function Toast({ children }) {
   return <div className="toast">{children}</div>;
 }
 
+// טווח שעות שנקרא תמיד משמאל-לימין (למשל 09:00–11:00) גם בתוך עמוד RTL
+export function TimeRange({ from, to }) {
+  return <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>{from}–{to}</span>;
+}
+
 // תגית סטטוס להזמנה: ממתין לאישור / מאושר
 export function StatusPill({ status }) {
   if (status === 'pending') return <span className="pill pending">ממתין לאישור ⏳</span>;

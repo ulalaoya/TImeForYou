@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../AppContext.js';
 import WeekCalendar from '../components/WeekCalendar.jsx';
-import { Spinner, Toast } from '../components/common.jsx';
+import { Spinner, Toast, TimeRange } from '../components/common.jsx';
 import { subscribeBookings, createBooking, updateBooking, SlotTakenError } from '../data/index.js';
 import {
   defaultWeekStart, weekStartSunday, weekDaysSunThu, toISODate, addDays, fromISODate,
@@ -149,12 +149,12 @@ export default function NewBooking({ navigate }) {
       <div className="week-head">
         {/* RTL: הילד הראשון מוצג מימין → ‹ימין› שבוע קודם (עבר); האחרון משמאל → ‹שמאל› שבוע הבא (עתיד) */}
         <button className="week-nav-btn" disabled={!canPrev}
-          onClick={() => canPrev && setWeekStart(addDays(weekStart, -7))}>›</button>
+          onClick={() => canPrev && setWeekStart(addDays(weekStart, -7))}>‹</button>
         <div className="wk-label">
           שבוע {weekDays[0].getDate()}/{weekDays[0].getMonth() + 1} – {weekDays[4].getDate()}/{weekDays[4].getMonth() + 1}
         </div>
         <button className="week-nav-btn"
-          onClick={() => setWeekStart(addDays(weekStart, 7))}>‹</button>
+          onClick={() => setWeekStart(addDays(weekStart, 7))}>›</button>
       </div>
 
       <div className="cal-legend" style={{ display: 'flex', gap: 12, fontSize: 12, marginBottom: 8, color: 'var(--text-soft)', flexWrap: 'wrap' }}>
@@ -214,7 +214,7 @@ function Summary({ selected, count, config, busy, onBack, onConfirm }) {
       <div className="card">
         <div className="summary-row"><span className="k">יום</span><span className="v">{DAY_NAMES_HE[d.getDay()]}</span></div>
         <div className="summary-row"><span className="k">תאריך</span><span className="v">{formatDateHe(d)}</span></div>
-        <div className="summary-row"><span className="k">שעות</span><span className="v">{selected.time}–{end}</span></div>
+        <div className="summary-row"><span className="k">שעות</span><span className="v"><TimeRange from={selected.time} to={end} /></span></div>
         <div className="summary-row"><span className="k">משך</span><span className="v">{durationLabel(count)}</span></div>
       </div>
 
@@ -251,7 +251,7 @@ function Success({ created, family, config, navigate, onAgain }) {
       <p>התור ממתין לאישור של רוני</p>
       <p style={{ marginTop: -4 }}>יום {DAY_NAMES_HE[d.getDay()]}, {formatDateHe(d)}</p>
       <div className="card" style={{ width: '100%' }}>
-        <div className="summary-row"><span className="k">שעות</span><span className="v">{created.startTime}–{end}</span></div>
+        <div className="summary-row"><span className="k">שעות</span><span className="v"><TimeRange from={created.startTime} to={end} /></span></div>
         <div className="summary-row"><span className="k">משך</span><span className="v">{durationLabel(created.slotCount)}</span></div>
         <div className="price-big">{shekel(created.priceILS)}</div>
       </div>

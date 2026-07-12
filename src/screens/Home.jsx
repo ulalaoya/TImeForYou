@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../AppContext.js';
 import { assetUrl } from '../utils/assets.js';
-import { Avatar, Spinner, SectionTitle, StatusPill } from '../components/common.jsx';
+import { Avatar, Spinner, SectionTitle, StatusPill, TimeRange } from '../components/common.jsx';
 import { getBookingsInRange } from '../data/index.js';
 import { toISODate, addDays, fromISODate, formatDateHe, DAY_NAMES_HE } from '../utils/time.js';
 import { isActiveStatus } from '../utils/status.js';
@@ -60,7 +60,7 @@ export default function Home({ navigate }) {
             <Avatar avatarId={b.avatarId} size={46} />
             <div className="bi-main">
               <div className="bi-when">יום {DAY_NAMES_HE[d.getDay()]}, {formatDateHe(d)}</div>
-              <div className="bi-sub">{b.startTime}–{b.endTime} · {durationLabel(b.slotCount)}</div>
+              <div className="bi-sub"><TimeRange from={b.startTime} to={b.endTime} /> · {durationLabel(b.slotCount)}</div>
             </div>
             <div className="bi-actions">
               <StatusPill status={b.status} />

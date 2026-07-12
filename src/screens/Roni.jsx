@@ -142,11 +142,11 @@ function RoniHome({ navigate }) {
         <>
           <div className="week-head">
             {/* RTL: ראשון מימין → ‹ימין› שבוע קודם (עבר); אחרון משמאל → ‹שמאל› שבוע הבא (עתיד) */}
-            <button className="week-nav-btn" onClick={() => setWeekStart(addDays(weekStart, -7))}>›</button>
+            <button className="week-nav-btn" onClick={() => setWeekStart(addDays(weekStart, -7))}>‹</button>
             <div className="wk-label">
               שבוע {weekDays[0].getDate()}/{weekDays[0].getMonth() + 1} – {weekDays[4].getDate()}/{weekDays[4].getMonth() + 1}
             </div>
-            <button className="week-nav-btn" onClick={() => setWeekStart(addDays(weekStart, 7))}>‹</button>
+            <button className="week-nav-btn" onClick={() => setWeekStart(addDays(weekStart, 7))}>›</button>
           </div>
           <RoniCalendar config={config} weekDays={weekDays} bookings={bookings} now={now} onSeen={seen} />
           <p className="muted" style={{ fontSize: 12, marginTop: 10 }}>

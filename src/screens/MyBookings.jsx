@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useApp } from '../AppContext.js';
-import { Avatar, Spinner, SectionTitle, ConfirmDialog, EmptyState, Toast, StatusPill } from '../components/common.jsx';
+import { Avatar, Spinner, SectionTitle, ConfirmDialog, EmptyState, Toast, StatusPill, TimeRange } from '../components/common.jsx';
 import { getBookingsInRange, cancelBooking } from '../data/index.js';
 import { toISODate, addDays, fromISODate, formatDateHe, DAY_NAMES_HE } from '../utils/time.js';
 import { isActiveStatus } from '../utils/status.js';
@@ -98,7 +98,7 @@ function BookingCard({ b, config, onCancel, onEdit, past }) {
       <div className="bi-main">
         <div className="bi-when">יום {DAY_NAMES_HE[d.getDay()]}, {formatDateHe(d)}</div>
         <div className="bi-sub">
-          {b.startTime}–{b.endTime} · {durationLabel(b.slotCount)} · {shekel(priceFor(b.slotCount, config.pricePerHourILS))}
+          <TimeRange from={b.startTime} to={b.endTime} /> · {durationLabel(b.slotCount)} · {shekel(priceFor(b.slotCount, config.pricePerHourILS))}
         </div>
       </div>
       {cancelled ? (
