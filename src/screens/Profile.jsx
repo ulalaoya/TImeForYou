@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useApp } from '../AppContext.js';
 import { Avatar, Toast, ConfirmDialog } from '../components/common.jsx';
+import { avatarUrl } from '../utils/assets.js';
 import { updateFamily } from '../data/index.js';
 
 export default function Profile({ navigate }) {
-  const { family, setIdentity, clearIdentity } = useApp();
+  const { family, manifest, setIdentity, clearIdentity } = useApp();
   const [edit, setEdit] = useState(false);
   const [f, setF] = useState({ ...family });
   const [toast, setToast] = useState('');
@@ -17,7 +18,7 @@ export default function Profile({ navigate }) {
     const patch = {
       childName: f.childName, parentName: f.parentName,
       address: f.address, phone: String(f.phone).trim(),
-      email: f.email, notes: f.notes,
+      email: f.email, notes: f.notes, avatarId: f.avatarId,
     };
     await updateFamily(family.id, patch);
     setIdentity({ ...family, ...patch });
@@ -38,6 +39,23 @@ export default function Profile({ navigate }) {
       <div className="card" style={{ textAlign: 'start' }}>
         {edit ? (
           <>
+            <div className="field">
+              <label>אווטאר הילד/ה</label>
+              <div className="avatar-grid">
+                {manifest?.avatars.map((a) => (
+                  <button
+                    type="button"
+                    key={a.id}
+                    className={`avatar-pick ${f.avatarId === a.id ? 'selected' : ''}`}
+                    onClick={() => setF({ ...f, avatarId: a.id })}
+                    aria-label={`אווטאר ${a.label || a.id}`}
+                    aria-pressed={f.avatarId === a.id}
+                  >
+                    <img src={avatarUrl(a.id, manifest)} alt="" aria-hidden="true" />
+                  </button>
+                ))}
+              </div>
+            </div>
             <Row label="שם הילד/ה"><input value={f.childName} onChange={set('childName')} /></Row>
             <Row label="שם ההורה"><input value={f.parentName} onChange={set('parentName')} /></Row>
             <Row label="כתובת"><input value={f.address} onChange={set('address')} /></Row>
