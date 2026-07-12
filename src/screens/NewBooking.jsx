@@ -139,19 +139,22 @@ export default function NewBooking({ navigate }) {
     <div className="screen">
       <h1>{editing ? 'עריכת תור 📝' : 'הזמנת תור חדש 📅'}</h1>
       {editing && (
-        <div className="edit-banner">עריכת תור — בחרו מועד חדש</div>
+        <div className="edit-banner">
+          <div>התור הנוכחי (📍): יום {DAY_NAMES_HE[fromISODate(editing.date).getDay()]} {formatDateHe(fromISODate(editing.date))}, {editing.startTime}–{editing.endTime}</div>
+          <div style={{ fontWeight: 400, marginTop: 2 }}>בחרו מועד חדש, או השאירו את הנוכחי.</div>
+        </div>
       )}
       <p>בחרו יום ושעת התחלה פנויה (ירוק).</p>
 
       <div className="week-head">
-        {/* בכיוון RTL הילד הראשון מוצג מימין: → שבוע הבא; האחרון משמאל: → שבוע קודם */}
-        <button className="week-nav-btn"
-          onClick={() => setWeekStart(addDays(weekStart, 7))}>›</button>
+        {/* RTL: הילד הראשון מוצג מימין → ‹ימין› שבוע קודם (עבר); האחרון משמאל → ‹שמאל› שבוע הבא (עתיד) */}
+        <button className="week-nav-btn" disabled={!canPrev}
+          onClick={() => canPrev && setWeekStart(addDays(weekStart, -7))}>›</button>
         <div className="wk-label">
           שבוע {weekDays[0].getDate()}/{weekDays[0].getMonth() + 1} – {weekDays[4].getDate()}/{weekDays[4].getMonth() + 1}
         </div>
-        <button className="week-nav-btn" disabled={!canPrev}
-          onClick={() => canPrev && setWeekStart(addDays(weekStart, -7))}>‹</button>
+        <button className="week-nav-btn"
+          onClick={() => setWeekStart(addDays(weekStart, 7))}>‹</button>
       </div>
 
       <div className="cal-legend" style={{ display: 'flex', gap: 12, fontSize: 12, marginBottom: 8, color: 'var(--text-soft)', flexWrap: 'wrap' }}>
@@ -159,7 +162,7 @@ export default function NewBooking({ navigate }) {
       </div>
 
       {bookings === null ? <Spinner /> : (
-        <WeekCalendar config={config} weekDays={weekDays} bookings={visibleBookings} now={now} onPick={pickSlot} />
+        <WeekCalendar config={config} weekDays={weekDays} bookings={visibleBookings} editingBooking={editing} now={now} onPick={pickSlot} />
       )}
 
       {toast && <Toast>{toast}</Toast>}

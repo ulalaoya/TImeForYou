@@ -5,7 +5,7 @@ import {
 import { isActiveStatus } from '../utils/status.js';
 
 // יומן שבועי לצד ההורה — בחירת משבצת התחלה פנויה.
-export default function WeekCalendar({ config, weekDays, bookings, now, selected, onPick }) {
+export default function WeekCalendar({ config, weekDays, bookings, now, selected, editingBooking, onPick }) {
   const rows = gridRowTimes(config);
   const todayISO = toISODate(now);
 
@@ -16,6 +16,11 @@ export default function WeekCalendar({ config, weekDays, bookings, now, selected
     if (!busyByDay[b.date]) busyByDay[b.date] = new Set();
     for (const t of bookingOccupiedTimes(b.startTime, b.slotCount)) busyByDay[b.date].add(t);
   }
+
+  // בעריכה — המשבצות של התור הנוכחי מסומנות "נוכחי" (📍), ניתנות לבחירה
+  const editSet = editingBooking
+    ? new Set(bookingOccupiedTimes(editingBooking.startTime, editingBooking.slotCount))
+    : null;
 
   const selTimes = selected
     ? new Set(bookingOccupiedTimes(selected.time, selected.count || 1))
@@ -44,21 +49,25 @@ export default function WeekCalendar({ config, weekDays, bookings, now, selected
               const st = slotState(iso, time, config, now);
               const isSel = selected && selected.date === iso && selTimes.has(time);
               const isSelStart = selected && selected.date === iso && selected.time === time;
+              const isCurrent = editSet && editingBooking.date === iso && editSet.has(time);
+              const isCurrentStart = isCurrent && editingBooking.startTime === time;
 
               let cls = 'cal-slot';
               let clickable = false;
               if (isSelStart) cls += ' selstart';
               else if (isSel) cls += ' selrange';
+              else if (isCurrent) { cls += ' current'; clickable = true; }
               else if (busy) cls += ' busy';
               else if (st.locked) cls += ' locked';
               else if (st.past) cls += ' past';
               else { cls += ' free'; clickable = true; }
 
               // תווית נגישה: "יום שלישי 28/7 בשעה 10:00 — פנוי"
-              const stateLabel = clickable ? 'פנוי'
+              const stateLabel = isCurrent ? 'התור הנוכחי'
                 : busy ? 'תפוס'
                 : st.locked ? 'סגור'
-                : 'עבר';
+                : st.past ? 'עבר'
+                : 'פנוי';
               const label = `יום ${DAY_NAMES_HE[d.getDay()]} ${d.getDate()}/${d.getMonth() + 1} בשעה ${time} — ${stateLabel}`;
 
               const a11yProps = clickable
@@ -82,7 +91,7 @@ export default function WeekCalendar({ config, weekDays, bookings, now, selected
                   onClick={clickable ? () => onPick(iso, time) : undefined}
                   {...a11yProps}
                 >
-                  {busy ? '✕' : st.locked ? '🔒' : ''}
+                  {isCurrentStart ? '📍' : isCurrent ? '' : busy ? '✕' : st.locked ? '🔒' : ''}
                 </div>
               );
             })}

@@ -62,11 +62,11 @@ export default function RoniCalendar({ config, weekDays, bookings, now, onSeen }
                       <div
                         key={b.id}
                         className={`roni-chip ${cancelled ? 'cancelled' : ''} ${pending ? 'pending' : ''}`}
-                        style={{ background: c.bg, color: c.border, border: `1.5px ${pending ? 'dashed' : 'solid'} ${c.border}` }}
-                        title={`${b.childName} ${b.startTime}-${b.endTime}${pending ? ' (ממתין לאישור)' : ''}`}
+                        style={{ backgroundColor: c.bg, color: c.border, border: `${pending ? '2px dashed' : '1.5px solid'} ${c.border}` }}
+                        title={`${b.childName} ${b.startTime}-${b.endTime}${pending ? ' (ממתין לאישור)' : ' (מאושר)'}`}
                       >
                         <Avatar avatarId={b.avatarId} size={15} />
-                        {isStart && <span className="rc-name">{b.childName}{pending ? ' ⏳' : ''}</span>}
+                        {isStart && <span className="rc-name">{pending ? '⏳ ' : '✓ '}{b.childName}</span>}
                         {isStart && cancelled && (
                           <button
                             className="btn sm"

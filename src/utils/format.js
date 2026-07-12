@@ -1,17 +1,11 @@
 // עזרי טקסט בעברית — משך ומחיר.
 
-const WHOLE = {
-  1: 'שעה', 2: 'שעתיים', 3: 'שלוש שעות', 4: 'ארבע שעות',
-  5: 'חמש שעות', 6: 'שש שעות', 7: 'שבע שעות', 8: 'שמונה שעות',
-};
-
-// slotCount (משבצות של חצי שעה) -> תיאור עברי, למשל "שעה וחצי"
+// slotCount (משבצות של חצי שעה) -> תיאור עם מספר, למשל "1.5 שעות", "5 שעות"
 export function durationLabel(slotCount) {
-  const whole = Math.floor(slotCount / 2);
-  const half = slotCount % 2 === 1;
-  if (whole === 0) return 'חצי שעה';
-  const w = WHOLE[whole] || `${whole} שעות`;
-  return half ? `${w} וחצי` : w;
+  if (slotCount === 1) return 'חצי שעה';
+  const hours = slotCount / 2;
+  if (hours === 1) return 'שעה';
+  return `${hours} שעות`;
 }
 
 // מחיר לפי מספר משבצות ומחיר לשעה

@@ -363,6 +363,8 @@ p { margin: 0 0 10px; color: var(--text-soft); line-height: 1.55; }
 .cal-slot.busy { background: #fdeef0; border-color: #f6c9d0; color: #c98; }
 .cal-slot.locked { background: #f0f2f4; border-color: #e2e6ea; color: #c3ccd3; }
 .cal-slot.past { background: #f3f5f7; border-color: #e6e9ec; color: #ccd3d8; }
+.cal-slot.current { background: #fff3d6; border: 2px solid var(--orange); color: var(--orange); font-size: 14px; cursor: pointer; }
+.cal-slot.current:active { transform: scale(0.95); }
 .cal-slot.selstart { background: var(--sky); border-color: var(--sky-deep); color: #fff; font-weight: 700; }
 .cal-slot.selrange { background: #b3e5fc; border-color: var(--sky); color: var(--sky-deep); }
 
@@ -375,7 +377,10 @@ p { margin: 0 0 10px; color: var(--text-soft); line-height: 1.55; }
 .roni-chip img { width: 15px; height: 15px; border-radius: 50%; flex: none; }
 .roni-chip .rc-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .roni-chip.cancelled { text-decoration: line-through; opacity: 0.75; }
-.roni-chip.pending { opacity: 0.9; }
+/* ממתין לאישור — פסים אלכסוניים + מסגרת מקווקוות כדי להבדיל בבירור ממאושר (מלא) */
+.roni-chip.pending {
+  background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.10) 0 4px, transparent 4px 9px);
+}
 
 /* ── Duration picker ────────────────────────────────────────────── */
 .dur-options { display: flex; flex-wrap: wrap; gap: 8px; }
