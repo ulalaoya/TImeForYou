@@ -1,17 +1,19 @@
 import React from 'react';
 import {
-  gridRowTimes, toISODate, DAY_SHORT_HE, bookingOccupiedTimes,
+  gridRowTimes, slotState, toISODate, DAY_SHORT_HE, bookingOccupiedTimes,
 } from '../utils/time.js';
+import { isActiveStatus } from '../utils/status.js';
 import { colorById } from '../data/colors.js';
 import { Avatar } from './common.jsx';
 
-// יומן רוני — מציג את כל ההזמנות בצבע הילד. מבוטלות (שלא נצפו) מסומנות עם כפתור "ראיתי".
+// יומן רוני — מציג את כל ההזמנות בצבע הילד, וגם את שעות אי-הזמינות (סגור/עבר).
+// ממתינות לאישור מסומנות בקו מקווקו + ⏳; מבוטלות (שלא נצפו) עם כפתור "ראיתי".
 export default function RoniCalendar({ config, weekDays, bookings, now, onSeen }) {
   const rows = gridRowTimes(config);
   const todayISO = toISODate(now);
 
-  // חזותית מציגים booked ו-cancelled (לא cancelled_seen)
-  const visible = bookings.filter((b) => b.status === 'booked' || b.status === 'cancelled');
+  // חזותית מציגים הזמנות פעילות (pending/approved) ו-cancelled (לא cancelled_seen)
+  const visible = bookings.filter((b) => isActiveStatus(b.status) || b.status === 'cancelled');
 
   // אינדקס: מפתח `${iso}|${time}` -> מערך {booking, isStart}
   const cellIndex = {};
@@ -44,20 +46,27 @@ export default function RoniCalendar({ config, weekDays, bookings, now, onSeen }
             {weekDays.map((d) => {
               const iso = toISODate(d);
               const entries = cellIndex[`${iso}|${time}`] || [];
+              const st = slotState(iso, time, config, now);
+              let cls = 'cal-slot';
+              if (entries.length) cls += ' roni';
+              else if (st.locked) cls += ' locked';
+              else if (st.past) cls += ' past';
               return (
-                <div key={iso + time} className={`cal-slot ${entries.length ? 'roni' : ''}`}>
+                <div key={iso + time} className={cls}>
+                  {entries.length === 0 && st.locked && '🔒'}
                   {entries.map(({ b, isStart }) => {
                     const c = colorById(b.colorId);
                     const cancelled = b.status === 'cancelled';
+                    const pending = b.status === 'pending';
                     return (
                       <div
                         key={b.id}
-                        className={`roni-chip ${cancelled ? 'cancelled' : ''}`}
-                        style={{ background: c.bg, color: c.border, border: `1.5px solid ${c.border}` }}
-                        title={`${b.childName} ${b.startTime}-${b.endTime}`}
+                        className={`roni-chip ${cancelled ? 'cancelled' : ''} ${pending ? 'pending' : ''}`}
+                        style={{ background: c.bg, color: c.border, border: `1.5px ${pending ? 'dashed' : 'solid'} ${c.border}` }}
+                        title={`${b.childName} ${b.startTime}-${b.endTime}${pending ? ' (ממתין לאישור)' : ''}`}
                       >
                         <Avatar avatarId={b.avatarId} size={15} />
-                        {isStart && <span className="rc-name">{b.childName}</span>}
+                        {isStart && <span className="rc-name">{b.childName}{pending ? ' ⏳' : ''}</span>}
                         {isStart && cancelled && (
                           <button
                             className="btn sm"

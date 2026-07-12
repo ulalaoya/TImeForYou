@@ -78,6 +78,12 @@ export function specialPeriodFor(isoDate, config) {
   return periods.find((p) => isoDate >= p.from && isoDate <= p.to) || null;
 }
 
+// האם התאריך (ISO) חסום לחלוטין (יום חופשה) — נופל באחד מ-blockedRanges (כולל הקצוות)
+export function isDateBlocked(isoDate, config) {
+  const ranges = config?.blockedRanges || [];
+  return ranges.some((r) => isoDate >= r.from && isoDate <= r.to);
+}
+
 // שעות הפעילות הזמינות ליום נתון: {start, end}
 export function bookableHoursFor(isoDate, config) {
   const sp = specialPeriodFor(isoDate, config);
@@ -99,16 +105,19 @@ export function gridRowTimes(config) {
 // מצב משבצת ליום/שעה מסוימים, בהתחשב בתצורה ובזמן הנוכחי
 // מחזיר: { locked (מחוץ לשעות זמינות), past }
 export function slotState(isoDate, time, config, now = new Date()) {
-  const hours = bookableHoursFor(isoDate, config);
   const tMin = timeToMin(time);
+  const slotStart = fromISODate(isoDate);
+  slotStart.setHours(Math.floor(tMin / 60), tMin % 60, 0, 0);
+  const past = slotStart.getTime() <= now.getTime();
+
+  // יום חסום לחלוטין — כל המשבצות נעולות
+  if (isDateBlocked(isoDate, config)) return { locked: true, past };
+
+  const hours = bookableHoursFor(isoDate, config);
   const startMin = timeToMin(hours.start);
   const endMin = timeToMin(hours.end);
   // בר-הזמנה אם שעת ההתחלה בתוך [start, end-slot]
   const locked = tMin < startMin || tMin + SLOT_MINUTES > endMin;
-
-  const slotStart = fromISODate(isoDate);
-  slotStart.setHours(Math.floor(tMin / 60), tMin % 60, 0, 0);
-  const past = slotStart.getTime() <= now.getTime();
 
   return { locked, past };
 }

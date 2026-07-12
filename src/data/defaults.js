@@ -7,7 +7,11 @@ export const DEFAULT_APP_CONFIG = {
   roniPhone: '',
   pricePerHourILS: 20,
   regularHours: { start: '08:00', end: '16:00' },
-  specialPeriods: [
-    { from: '2026-07-12', to: '2026-07-23', start: '14:00', end: '16:00' },
+  // תקופות מיוחדות (שעות מצומצמות) — כרגע אין.
+  specialPeriods: [],
+  // ימי חופשה מלאים (blackout) — אין משבצות פנויות בכלל בטווחים הכלולים (כולל הקצוות).
+  blockedRanges: [
+    { from: '2026-07-12', to: '2026-07-16' },
+    { from: '2026-07-26', to: '2026-07-30' },
   ],
 };

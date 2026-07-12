@@ -54,6 +54,13 @@ export function Toast({ children }) {
   return <div className="toast">{children}</div>;
 }
 
+// תגית סטטוס להזמנה: ממתין לאישור / מאושר
+export function StatusPill({ status }) {
+  if (status === 'pending') return <span className="pill pending">ממתין לאישור ⏳</span>;
+  if (status === 'approved') return <span className="pill approved">מאושר ✓</span>;
+  return null;
+}
+
 export function EmptyState({ emoji = '🗓️', children }) {
   return (
     <div className="empty-state">

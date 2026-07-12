@@ -42,7 +42,7 @@ function Welcome({ onRegister, onLogin }) {
       <h2>ברוכים הבאים! 👋</h2>
       <p>רוני שומרת על הילדים כשאתם בבית — כדי שיהיה לכם קצת זמן לעצמכם.</p>
       <button className="btn block lg heart" onClick={onRegister} style={{ marginBottom: 12 }}>
-        רישום חדש ✨
+        הרשמה וקביעת תור ✨
       </button>
       <button className="btn block ghost" onClick={onLogin}>
         כבר נרשמנו — כניסה עם מספר טלפון
@@ -137,7 +137,7 @@ function Register({ manifest, setIdentity, onBack, show }) {
       </div>
 
       <button className="btn block lg heart" disabled={busy} onClick={submit} style={{ marginTop: 8 }}>
-        {busy ? 'רק רגע…' : 'סיימנו, בואו נתחיל! 🎉'}
+        {busy ? 'רק רגע…' : 'סיימתי, אפשר להתחיל 🎉'}
       </button>
       <div className="divider-btn">
         <button className="link-btn" onClick={onBack}>חזרה</button>

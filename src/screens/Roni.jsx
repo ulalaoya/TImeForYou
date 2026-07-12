@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../AppContext.js';
 import RoniCalendar from '../components/RoniCalendar.jsx';
-import { Avatar, Spinner } from '../components/common.jsx';
+import { Avatar, Spinner, StatusPill } from '../components/common.jsx';
 import { colorById } from '../data/colors.js';
 import {
-  subscribeBookings, markCancellationSeen, getFamilyById,
+  subscribeBookings, markCancellationSeen, approveBooking, getFamilyById,
 } from '../data/index.js';
 import {
   defaultWeekStart, weekDaysSunThu, toISODate, addDays, fromISODate,
@@ -103,9 +103,21 @@ function RoniHome({ navigate }) {
   async function seen(id) {
     await markCancellationSeen(id);
   }
+  async function approve(id) {
+    await approveBooking(id);
+  }
 
+  // רשימות אקשן ותג ההתראה — מכסים את כל התאריכים הקרובים (מהמנוי הרחב),
+  // ולא רק את השבוע המוצג ביומן.
+  const isFutureBooking = (b) => {
+    const end = fromISODate(b.date);
+    const [h, m] = b.endTime.split(':').map(Number);
+    end.setHours(h, m, 0, 0);
+    return end.getTime() > now.getTime();
+  };
   const pendingCancels = (bookings || []).filter((b) => b.status === 'cancelled');
-  const badge = pendingCancels.length;
+  const pendingApprovals = (bookings || []).filter((b) => b.status === 'pending' && isFutureBooking(b));
+  const badge = pendingCancels.length + pendingApprovals.length;
 
   return (
     <div className="screen">
@@ -129,11 +141,12 @@ function RoniHome({ navigate }) {
       {bookings && tab === 'calendar' && (
         <>
           <div className="week-head">
-            <button className="week-nav-btn" onClick={() => setWeekStart(addDays(weekStart, -7))}>›</button>
+            {/* RTL: ראשון מימין → שבוע הבא; אחרון משמאל → שבוע קודם */}
+            <button className="week-nav-btn" onClick={() => setWeekStart(addDays(weekStart, 7))}>›</button>
             <div className="wk-label">
               שבוע {weekDays[0].getDate()}/{weekDays[0].getMonth() + 1} – {weekDays[4].getDate()}/{weekDays[4].getMonth() + 1}
             </div>
-            <button className="week-nav-btn" onClick={() => setWeekStart(addDays(weekStart, 7))}>‹</button>
+            <button className="week-nav-btn" onClick={() => setWeekStart(addDays(weekStart, -7))}>‹</button>
           </div>
           <RoniCalendar config={config} weekDays={weekDays} bookings={bookings} now={now} onSeen={seen} />
           <p className="muted" style={{ fontSize: 12, marginTop: 10 }}>
@@ -144,16 +157,17 @@ function RoniHome({ navigate }) {
 
       {bookings && tab === 'list' && (
         <RoniList bookings={bookings} families={families} config={config} now={now}
-          pending={pendingCancels} onSeen={seen} />
+          pendingCancels={pendingCancels} pendingApprovals={pendingApprovals}
+          onSeen={seen} onApprove={approve} />
       )}
     </div>
   );
 }
 
-function RoniList({ bookings, families, config, now, pending, onSeen }) {
+function RoniList({ bookings, families, config, now, pendingCancels, pendingApprovals, onSeen, onApprove }) {
   const nowMs = now.getTime();
   const upcoming = bookings
-    .filter((b) => b.status === 'booked')
+    .filter((b) => b.status === 'approved')
     .filter((b) => {
       const end = fromISODate(b.date);
       const [h, m] = b.endTime.split(':').map(Number);
@@ -163,15 +177,22 @@ function RoniList({ bookings, families, config, now, pending, onSeen }) {
 
   return (
     <div>
-      <h3 style={{ marginTop: 6 }}>הזמנות קרובות ({upcoming.length})</h3>
-      {upcoming.length === 0 && <p className="muted">אין הזמנות קרובות.</p>}
+      <h3 style={{ marginTop: 6 }}>ממתינים לאישור ({pendingApprovals.length})</h3>
+      {pendingApprovals.length === 0 && <p className="muted">אין תורים שממתינים לאישור 🎉</p>}
+      {pendingApprovals.map((b) => (
+        <RoniBookingCard key={b.id} b={b} fam={families[b.familyId]} config={config} pending
+          onApprove={() => onApprove(b.id)} />
+      ))}
+
+      <h3 style={{ marginTop: 20 }}>הזמנות מאושרות קרובות ({upcoming.length})</h3>
+      {upcoming.length === 0 && <p className="muted">אין הזמנות מאושרות קרובות.</p>}
       {upcoming.map((b) => (
         <RoniBookingCard key={b.id} b={b} fam={families[b.familyId]} config={config} />
       ))}
 
-      <h3 style={{ marginTop: 20 }}>ביטולים ממתינים ({pending.length})</h3>
-      {pending.length === 0 && <p className="muted">אין ביטולים ממתינים 🎉</p>}
-      {pending.map((b) => (
+      <h3 style={{ marginTop: 20 }}>ביטולים ממתינים ({pendingCancels.length})</h3>
+      {pendingCancels.length === 0 && <p className="muted">אין ביטולים ממתינים 🎉</p>}
+      {pendingCancels.map((b) => (
         <RoniBookingCard key={b.id} b={b} fam={families[b.familyId]} config={config} cancelled
           onSeen={() => onSeen(b.id)} />
       ))}
@@ -179,22 +200,25 @@ function RoniList({ bookings, families, config, now, pending, onSeen }) {
   );
 }
 
-function RoniBookingCard({ b, fam, config, cancelled, onSeen }) {
+function RoniBookingCard({ b, fam, config, cancelled, pending, onSeen, onApprove }) {
   const d = fromISODate(b.date);
   const c = colorById(b.colorId);
   return (
-    <div className="card" style={{ borderInlineStart: `6px solid ${c.border}`, marginBottom: 10, opacity: cancelled ? 0.85 : 1 }}>
+    <div className="card" style={{ borderInlineStart: `6px solid ${c.border}`, borderStyle: pending ? 'dashed' : 'solid', marginBottom: 10, opacity: cancelled ? 0.85 : 1 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
         <Avatar avatarId={b.avatarId} size={40} />
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, textDecoration: cancelled ? 'line-through' : 'none' }}>
+          <div style={{ fontWeight: 700, textDecoration: cancelled ? 'line-through' : 'none', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             {b.childName}
+            {!cancelled && <StatusPill status={b.status} />}
           </div>
           <div style={{ fontSize: 13, color: 'var(--text-soft)' }}>
             יום {DAY_NAMES_HE[d.getDay()]}, {formatDateHe(d)}
           </div>
         </div>
-        <span className={`pill ${cancelled ? 'cancel' : ''}`}>{b.startTime}–{b.endTime}</span>
+        <span className={`pill ${cancelled ? 'cancel' : ''}`}>
+          <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>{b.startTime}–{b.endTime}</span>
+        </span>
       </div>
       <div className="summary-row" style={{ padding: '6px 0' }}>
         <span className="k">משך / מחיר</span>
@@ -223,6 +247,9 @@ function RoniBookingCard({ b, fam, config, cancelled, onSeen }) {
       )}
       {cancelled && (
         <button className="btn sm block green" style={{ marginTop: 8 }} onClick={onSeen}>ראיתי ✔</button>
+      )}
+      {pending && (
+        <button className="btn sm block green" style={{ marginTop: 8 }} onClick={onApprove}>אישור ✓</button>
       )}
     </div>
   );

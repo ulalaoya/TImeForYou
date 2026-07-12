@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../AppContext.js';
 import { assetUrl } from '../utils/assets.js';
-import { Avatar, Spinner, SectionTitle } from '../components/common.jsx';
+import { Avatar, Spinner, SectionTitle, StatusPill } from '../components/common.jsx';
 import { getBookingsInRange } from '../data/index.js';
 import { toISODate, addDays, fromISODate, formatDateHe, DAY_NAMES_HE } from '../utils/time.js';
+import { isActiveStatus } from '../utils/status.js';
 import { durationLabel, priceFor, shekel } from '../utils/format.js';
 
 export default function Home({ navigate }) {
@@ -17,7 +18,7 @@ export default function Home({ navigate }) {
     getBookingsInRange(from, to).then((rows) => {
       const nowMs = now.getTime();
       const mine = rows
-        .filter((b) => b.familyId === family.id && b.status === 'booked')
+        .filter((b) => b.familyId === family.id && isActiveStatus(b.status))
         .filter((b) => {
           const end = fromISODate(b.date);
           const [h, m] = b.endTime.split(':').map(Number);
@@ -35,13 +36,13 @@ export default function Home({ navigate }) {
       <div className="hero-greet">
         <Avatar avatarId={family.avatarId} size={64} ring />
         <div>
-          <h2 style={{ marginBottom: 2 }}>שלום, {family.childName}! 🌟</h2>
+          <h2 style={{ marginBottom: 2 }}>שלום, {family.parentName}! 🌟</h2>
           <div className="slogan">את רגועה, הם שמחים 💛</div>
         </div>
       </div>
 
       <button className="btn block lg heart" onClick={() => navigate('/new')} style={{ marginBottom: 18 }}>
-        📅 הזמנת תור חדש
+        📅 קביעת תור חדש ל{family.childName}
       </button>
 
       <SectionTitle icon="calendar">התורים הקרובים</SectionTitle>
@@ -49,8 +50,7 @@ export default function Home({ navigate }) {
       {upcoming && upcoming.length === 0 && (
         <div className="card center-col">
           <div style={{ fontSize: 40 }}>🗓️</div>
-          <p style={{ marginBottom: 12 }}>אין עדיין תורים. בואו נקבע אחד!</p>
-          <button className="btn" onClick={() => navigate('/new')}>לקביעת תור</button>
+          <p style={{ marginBottom: 0 }}>אין עדיין תורים ביומן של רוני</p>
         </div>
       )}
       {upcoming && upcoming.slice(0, 3).map((b) => {
@@ -62,7 +62,10 @@ export default function Home({ navigate }) {
               <div className="bi-when">יום {DAY_NAMES_HE[d.getDay()]}, {formatDateHe(d)}</div>
               <div className="bi-sub">{b.startTime}–{b.endTime} · {durationLabel(b.slotCount)}</div>
             </div>
-            <span className="pill">{shekel(priceFor(b.slotCount, config.pricePerHourILS))}</span>
+            <div className="bi-actions">
+              <StatusPill status={b.status} />
+              <span className="pill">{shekel(priceFor(b.slotCount, config.pricePerHourILS))}</span>
+            </div>
           </div>
         );
       })}

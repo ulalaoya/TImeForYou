@@ -2,6 +2,7 @@ import React from 'react';
 import {
   gridRowTimes, slotState, toISODate, DAY_SHORT_HE, DAY_NAMES_HE, bookingOccupiedTimes,
 } from '../utils/time.js';
+import { isActiveStatus } from '../utils/status.js';
 
 // יומן שבועי לצד ההורה — בחירת משבצת התחלה פנויה.
 export default function WeekCalendar({ config, weekDays, bookings, now, selected, onPick }) {
@@ -11,7 +12,7 @@ export default function WeekCalendar({ config, weekDays, bookings, now, selected
   // מפת תפוסה ליום -> Set של שעות
   const busyByDay = {};
   for (const b of bookings) {
-    if (b.status !== 'booked') continue;
+    if (!isActiveStatus(b.status)) continue;
     if (!busyByDay[b.date]) busyByDay[b.date] = new Set();
     for (const t of bookingOccupiedTimes(b.startTime, b.slotCount)) busyByDay[b.date].add(t);
   }

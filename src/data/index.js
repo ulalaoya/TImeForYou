@@ -20,7 +20,9 @@ export const createFamily = (...a) => adapter.createFamily(...a);
 export const updateFamily = (...a) => adapter.updateFamily(...a);
 export const getBookingsInRange = (...a) => adapter.getBookingsInRange(...a);
 export const createBooking = (...a) => adapter.createBooking(...a);
+export const updateBooking = (...a) => adapter.updateBooking(...a);
 export const cancelBooking = (...a) => adapter.cancelBooking(...a);
+export const approveBooking = (...a) => adapter.approveBooking(...a);
 export const markCancellationSeen = (...a) => adapter.markCancellationSeen(...a);
 export const subscribeBookings = (...a) => adapter.subscribeBookings(...a);
 

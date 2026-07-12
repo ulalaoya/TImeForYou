@@ -2,6 +2,7 @@
 import { DEFAULT_APP_CONFIG } from './defaults.js';
 import { pickColorId } from './colors.js';
 import { endTimeFor, bookingOccupiedTimes } from '../utils/time.js';
+import { isActiveStatus } from '../utils/status.js';
 import { normalizePhone } from '../utils/phone.js';
 import { SlotTakenError } from './errors.js';
 
@@ -101,7 +102,7 @@ export async function createBooking(data) {
 
   // בדיקה שכל המשבצות עדיין פנויות (רק הזמנות פעילות באותו יום)
   for (const b of store.bookings) {
-    if (b.date !== data.date || b.status !== 'booked') continue;
+    if (b.date !== data.date || !isActiveStatus(b.status)) continue;
     for (const t of bookingOccupiedTimes(b.startTime, b.slotCount)) {
       if (occupied.has(t)) throw new SlotTakenError();
     }
@@ -115,7 +116,7 @@ export async function createBooking(data) {
     endTime,
     slotCount: data.slotCount,
     priceILS: data.priceILS,
-    status: 'booked',
+    status: 'pending',
     createdAt: Date.now(),
     childName: data.childName,
     avatarId: data.avatarId,
@@ -133,6 +134,50 @@ export async function cancelBooking(id) {
   if (!b) throw new Error('booking not found');
   b.status = 'cancelled';
   b.cancelledAt = Date.now();
+  save(store);
+  notifyAll();
+  return b;
+}
+
+// אישור הזמנה ע"י רוני: pending -> approved
+export async function approveBooking(id) {
+  const store = load();
+  const b = store.bookings.find((x) => x.id === id);
+  if (!b) throw new Error('booking not found');
+  if (b.status === 'pending') {
+    b.status = 'approved';
+    b.approvedAt = Date.now();
+    save(store);
+    notifyAll();
+  }
+  return b;
+}
+
+// עדכון הזמנה קיימת (עריכה ע"י ההורה). משחרר את המשבצות הישנות,
+// מוודא שהחדשות פנויות (למעט חפיפה עם ההזמנה עצמה), ומחזיר ל-pending לאישור מחדש.
+export async function updateBooking(id, { date, startTime, slotCount, priceILS }) {
+  const store = load();
+  const b = store.bookings.find((x) => x.id === id);
+  if (!b) throw new Error('booking not found');
+  const endTime = endTimeFor(startTime, slotCount);
+  const occupied = new Set(bookingOccupiedTimes(startTime, slotCount));
+
+  // בדיקת פנויות מול שאר ההזמנות הפעילות (לא כולל ההזמנה הנוכחית)
+  for (const other of store.bookings) {
+    if (other.id === id) continue;
+    if (other.date !== date || !isActiveStatus(other.status)) continue;
+    for (const t of bookingOccupiedTimes(other.startTime, other.slotCount)) {
+      if (occupied.has(t)) throw new SlotTakenError();
+    }
+  }
+
+  b.date = date;
+  b.startTime = startTime;
+  b.endTime = endTime;
+  b.slotCount = slotCount;
+  b.priceILS = priceILS;
+  b.status = 'pending';
+  b.updatedAt = Date.now();
   save(store);
   notifyAll();
   return b;

@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useApp } from '../AppContext.js';
-import { Avatar, Spinner, SectionTitle, ConfirmDialog, EmptyState, Toast } from '../components/common.jsx';
+import { Avatar, Spinner, SectionTitle, ConfirmDialog, EmptyState, Toast, StatusPill } from '../components/common.jsx';
 import { getBookingsInRange, cancelBooking } from '../data/index.js';
 import { toISODate, addDays, fromISODate, formatDateHe, DAY_NAMES_HE } from '../utils/time.js';
+import { isActiveStatus } from '../utils/status.js';
 import { durationLabel, priceFor, shekel } from '../utils/format.js';
 
-export default function MyBookings() {
-  const { family, config } = useApp();
+export default function MyBookings({ navigate }) {
+  const { family, config, setEditing } = useApp();
   const [rows, setRows] = useState(null);
   const [confirmId, setConfirmId] = useState(null);
   const [showPast, setShowPast] = useState(false);
@@ -38,10 +39,15 @@ export default function MyBookings() {
     load();
   }
 
+  function startEdit(b) {
+    setEditing(b);
+    navigate('/new');
+  }
+
   if (rows === null) return <div className="screen"><Spinner /></div>;
 
-  const upcoming = rows.filter((b) => b.status === 'booked' && isFuture(b));
-  const past = rows.filter((b) => !(b.status === 'booked' && isFuture(b)));
+  const upcoming = rows.filter((b) => isActiveStatus(b.status) && isFuture(b));
+  const past = rows.filter((b) => !(isActiveStatus(b.status) && isFuture(b)));
 
   return (
     <div className="screen">
@@ -50,7 +56,8 @@ export default function MyBookings() {
       <SectionTitle icon="calendar">תורים קרובים</SectionTitle>
       {upcoming.length === 0 && <EmptyState emoji="🗓️">אין תורים קרובים.</EmptyState>}
       {upcoming.map((b) => (
-        <BookingCard key={b.id} b={b} config={config} onCancel={() => setConfirmId(b.id)} />
+        <BookingCard key={b.id} b={b} config={config}
+          onCancel={() => setConfirmId(b.id)} onEdit={() => startEdit(b)} />
       ))}
 
       {past.length > 0 && (
@@ -82,9 +89,9 @@ export default function MyBookings() {
   );
 }
 
-function BookingCard({ b, config, onCancel, past }) {
+function BookingCard({ b, config, onCancel, onEdit, past }) {
   const d = fromISODate(b.date);
-  const cancelled = b.status !== 'booked';
+  const cancelled = !isActiveStatus(b.status);
   return (
     <div className={`booking-item ${cancelled ? 'cancelled' : ''}`}>
       <Avatar avatarId={b.avatarId} size={46} />
@@ -99,7 +106,13 @@ function BookingCard({ b, config, onCancel, past }) {
       ) : past ? (
         <span className="pill">הסתיים</span>
       ) : (
-        <button className="btn sm danger-outline" onClick={onCancel}>ביטול</button>
+        <div className="bi-actions">
+          <StatusPill status={b.status} />
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button className="btn sm ghost" onClick={onEdit}>עריכה</button>
+            <button className="btn sm danger-outline" onClick={onCancel}>ביטול</button>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -299,6 +299,21 @@ p { margin: 0 0 10px; color: var(--text-soft); line-height: 1.55; }
   background: #e3f4ff; color: var(--sky-deep); white-space: nowrap;
 }
 .pill.cancel { background: #ffe1e1; color: var(--danger); }
+.pill.pending { background: #fff3d6; color: #a6771a; }
+.pill.approved { background: #e6f6e9; color: var(--green); }
+
+/* אזור פעולות/סטטוס בצד הכרטיס (סטטוס מעל, כפתורים מתחת) */
+.bi-actions {
+  display: flex; flex-direction: column; align-items: flex-end;
+  gap: 6px; flex: none;
+}
+
+/* באנר עריכת תור */
+.edit-banner {
+  background: #fff3d6; color: #a6771a; font-weight: 700; font-size: 14px;
+  padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 12px;
+  text-align: center;
+}
 
 /* ── Week calendar ──────────────────────────────────────────────── */
 .week-head {
@@ -360,6 +375,7 @@ p { margin: 0 0 10px; color: var(--text-soft); line-height: 1.55; }
 .roni-chip img { width: 15px; height: 15px; border-radius: 50%; flex: none; }
 .roni-chip .rc-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .roni-chip.cancelled { text-decoration: line-through; opacity: 0.75; }
+.roni-chip.pending { opacity: 0.9; }
 
 /* ── Duration picker ────────────────────────────────────────────── */
 .dur-options { display: flex; flex-wrap: wrap; gap: 8px; }

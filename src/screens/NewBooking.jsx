@@ -2,20 +2,23 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../AppContext.js';
 import WeekCalendar from '../components/WeekCalendar.jsx';
 import { Spinner, Toast } from '../components/common.jsx';
-import { subscribeBookings, createBooking, SlotTakenError } from '../data/index.js';
+import { subscribeBookings, createBooking, updateBooking, SlotTakenError } from '../data/index.js';
 import {
-  defaultWeekStart, weekDaysSunThu, toISODate, addDays, fromISODate,
+  defaultWeekStart, weekStartSunday, weekDaysSunThu, toISODate, addDays, fromISODate,
   formatDateHe, DAY_NAMES_HE, maxRunFrom, endTimeFor, bookingOccupiedTimes,
 } from '../utils/time.js';
+import { isActiveStatus } from '../utils/status.js';
 import { durationLabel, priceFor, shekel } from '../utils/format.js';
 import { bookingWaLink } from '../utils/whatsapp.js';
 
 export default function NewBooking({ navigate }) {
-  const { family, config } = useApp();
+  const { family, config, editing, setEditing } = useApp();
   const now = useMemo(() => new Date(), []);
   const thisWeekStart = useMemo(() => defaultWeekStart(now, config), [now, config]);
 
-  const [weekStart, setWeekStart] = useState(thisWeekStart);
+  const [weekStart, setWeekStart] = useState(
+    () => (editing ? weekStartSunday(fromISODate(editing.date)) : thisWeekStart)
+  );
   const [bookings, setBookings] = useState(null);
   const [step, setStep] = useState('calendar'); // calendar | duration | summary | success
   const [selected, setSelected] = useState(null); // {date, time}
@@ -43,15 +46,21 @@ export default function NewBooking({ navigate }) {
     setStep('duration');
   }
 
+  // בעריכה — מתעלמים מההזמנה הנוכחית עצמה כך שהמשבצות שלה נחשבות פנויות/נבחרות
+  const visibleBookings = useMemo(
+    () => (editing ? (bookings || []).filter((b) => b.id !== editing.id) : bookings),
+    [bookings, editing]
+  );
+
   const busySetForSelected = useMemo(() => {
-    if (!selected || !bookings) return new Set();
+    if (!selected || !visibleBookings) return new Set();
     const s = new Set();
-    for (const b of bookings) {
-      if (b.date !== selected.date || b.status !== 'booked') continue;
+    for (const b of visibleBookings) {
+      if (b.date !== selected.date || !isActiveStatus(b.status)) continue;
       for (const t of bookingOccupiedTimes(b.startTime, b.slotCount)) s.add(t);
     }
     return s;
-  }, [selected, bookings]);
+  }, [selected, visibleBookings]);
 
   const maxRun = useMemo(() => {
     if (!selected) return 0;
@@ -62,17 +71,29 @@ export default function NewBooking({ navigate }) {
     setBusy(true);
     try {
       const price = priceFor(count, config.pricePerHourILS);
-      const b = await createBooking({
-        familyId: family.id,
-        date: selected.date,
-        startTime: selected.time,
-        slotCount: count,
-        priceILS: price,
-        childName: family.childName,
-        avatarId: family.avatarId,
-        colorId: family.colorId,
-      });
-      setCreated({ ...b, priceILS: price, slotCount: count });
+      let b;
+      if (editing) {
+        b = await updateBooking(editing.id, {
+          date: selected.date,
+          startTime: selected.time,
+          slotCount: count,
+          priceILS: price,
+        });
+        setCreated({ ...editing, ...b, priceILS: price, slotCount: count, _edited: true });
+        setEditing(null);
+      } else {
+        b = await createBooking({
+          familyId: family.id,
+          date: selected.date,
+          startTime: selected.time,
+          slotCount: count,
+          priceILS: price,
+          childName: family.childName,
+          avatarId: family.avatarId,
+          colorId: family.colorId,
+        });
+        setCreated({ ...b, priceILS: price, slotCount: count });
+      }
       setStep('success');
     } catch (e) {
       if (e instanceof SlotTakenError || e.slotTaken) {
@@ -116,16 +137,21 @@ export default function NewBooking({ navigate }) {
   const canPrev = weekStart > thisWeekStart;
   return (
     <div className="screen">
-      <h1>הזמנת תור חדש 📅</h1>
+      <h1>{editing ? 'עריכת תור 📝' : 'הזמנת תור חדש 📅'}</h1>
+      {editing && (
+        <div className="edit-banner">עריכת תור — בחרו מועד חדש</div>
+      )}
       <p>בחרו יום ושעת התחלה פנויה (ירוק).</p>
 
       <div className="week-head">
-        <button className="week-nav-btn" disabled={!canPrev}
-          onClick={() => canPrev && setWeekStart(addDays(weekStart, -7))}>›</button>
+        {/* בכיוון RTL הילד הראשון מוצג מימין: → שבוע הבא; האחרון משמאל: → שבוע קודם */}
+        <button className="week-nav-btn"
+          onClick={() => setWeekStart(addDays(weekStart, 7))}>›</button>
         <div className="wk-label">
           שבוע {weekDays[0].getDate()}/{weekDays[0].getMonth() + 1} – {weekDays[4].getDate()}/{weekDays[4].getMonth() + 1}
         </div>
-        <button className="week-nav-btn" onClick={() => setWeekStart(addDays(weekStart, 7))}>‹</button>
+        <button className="week-nav-btn" disabled={!canPrev}
+          onClick={() => canPrev && setWeekStart(addDays(weekStart, -7))}>‹</button>
       </div>
 
       <div className="cal-legend" style={{ display: 'flex', gap: 12, fontSize: 12, marginBottom: 8, color: 'var(--text-soft)', flexWrap: 'wrap' }}>
@@ -133,7 +159,7 @@ export default function NewBooking({ navigate }) {
       </div>
 
       {bookings === null ? <Spinner /> : (
-        <WeekCalendar config={config} weekDays={weekDays} bookings={bookings} now={now} onPick={pickSlot} />
+        <WeekCalendar config={config} weekDays={weekDays} bookings={visibleBookings} now={now} onPick={pickSlot} />
       )}
 
       {toast && <Toast>{toast}</Toast>}
@@ -195,6 +221,9 @@ function Summary({ selected, count, config, busy, onBack, onConfirm }) {
           <span className="v">{shekel(price)}</span>
         </div>
         <div className="price-big">{shekel(price)}</div>
+        <p className="muted" style={{ textAlign: 'center', fontSize: 13, margin: 0 }}>
+          ניתן לשלם במזומן / Paybox 💵
+        </p>
       </div>
 
       <div style={{ display: 'flex', gap: 10 }}>
@@ -211,11 +240,13 @@ function Success({ created, family, config, navigate, onAgain }) {
   const d = fromISODate(created.date);
   const end = created.endTime || endTimeFor(created.startTime, created.slotCount);
   const waLink = bookingWaLink(created, family, config.roniPhone);
+  const edited = created._edited;
   return (
     <div className="screen center-col">
-      <div className="success-emoji">🎉</div>
-      <h1 style={{ marginTop: 8 }}>התור נקבע!</h1>
-      <p>נתראה ביום {DAY_NAMES_HE[d.getDay()]}, {formatDateHe(d)}</p>
+      <div className="success-emoji">{edited ? '📝' : '⏳'}</div>
+      <h1 style={{ marginTop: 8 }}>{edited ? 'התור עודכן ונשלח לאישור ⏳' : 'הבקשה נשלחה! ⏳'}</h1>
+      <p>התור ממתין לאישור של רוני</p>
+      <p style={{ marginTop: -4 }}>יום {DAY_NAMES_HE[d.getDay()]}, {formatDateHe(d)}</p>
       <div className="card" style={{ width: '100%' }}>
         <div className="summary-row"><span className="k">שעות</span><span className="v">{created.startTime}–{end}</span></div>
         <div className="summary-row"><span className="k">משך</span><span className="v">{durationLabel(created.slotCount)}</span></div>
@@ -223,7 +254,7 @@ function Success({ created, family, config, navigate, onAgain }) {
       </div>
       {waLink && (
         <a className="btn block wa" href={waLink} target="_blank" rel="noopener noreferrer">
-          עדכנו את רוני בוואטסאפ 💬
+          בקשו מרוני לאשר בוואטסאפ 💬
         </a>
       )}
       <button className="btn block heart" onClick={() => navigate('/my-bookings')}>לצפייה בהזמנות שלי</button>

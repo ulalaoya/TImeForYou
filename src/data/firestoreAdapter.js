@@ -100,7 +100,7 @@ export async function createBooking(data) {
       endTime,
       slotCount: data.slotCount,
       priceILS: data.priceILS,
-      status: 'booked',
+      status: 'pending',
       createdAt: Date.now(),
       serverCreatedAt: serverTimestamp(),
       childName: data.childName,
@@ -110,8 +110,62 @@ export async function createBooking(data) {
   });
 
   return {
-    id: bookingRef.id, ...data, endTime, status: 'booked', createdAt: Date.now(),
+    id: bookingRef.id, ...data, endTime, status: 'pending', createdAt: Date.now(),
   };
+}
+
+// אישור הזמנה ע"י רוני: pending -> approved (התפוסה במסמך slots לא משתנה)
+export async function approveBooking(id) {
+  await updateDoc(doc(db, 'bookings', id), {
+    status: 'approved',
+    approvedAt: Date.now(),
+  });
+}
+
+// עדכון הזמנה קיימת: משחרר את המשבצות הישנות, מוודא שהחדשות פנויות,
+// וכותב מועד/משך/מחיר חדשים עם חזרה ל-pending לאישור מחדש.
+export async function updateBooking(id, { date, startTime, slotCount, priceILS }) {
+  const bookingRef = doc(db, 'bookings', id);
+  const endTime = endTimeFor(startTime, slotCount);
+  const newTimes = bookingOccupiedTimes(startTime, slotCount);
+
+  await runTransaction(db, async (tx) => {
+    // כל הקריאות לפני הכתיבות (דרישת טרנזקציות Firestore)
+    const snap = await tx.get(bookingRef);
+    if (!snap.exists()) throw new Error('booking not found');
+    const b = snap.data();
+    const oldDate = b.date;
+    const sameDay = oldDate === date;
+    const oldSlotsRef = doc(db, 'slots', oldDate);
+    const newSlotsRef = doc(db, 'slots', date);
+    const oldSlotsSnap = await tx.get(oldSlotsRef);
+    const newSlotsSnap = sameDay ? null : await tx.get(newSlotsRef);
+
+    const oldOccupied = oldSlotsSnap.exists() ? { ...(oldSlotsSnap.data().occupied || {}) } : {};
+    // שחרור המשבצות הישנות של ההזמנה הזו
+    for (const t of bookingOccupiedTimes(b.startTime, b.slotCount)) {
+      if (oldOccupied[t] === id) delete oldOccupied[t];
+    }
+
+    if (sameDay) {
+      for (const t of newTimes) { if (oldOccupied[t]) throw new SlotTakenError(); }
+      for (const t of newTimes) oldOccupied[t] = id;
+      tx.set(oldSlotsRef, { occupied: oldOccupied });
+    } else {
+      tx.set(oldSlotsRef, { occupied: oldOccupied });
+      const newOccupied = newSlotsSnap.exists() ? { ...(newSlotsSnap.data().occupied || {}) } : {};
+      for (const t of newTimes) { if (newOccupied[t]) throw new SlotTakenError(); }
+      for (const t of newTimes) newOccupied[t] = id;
+      tx.set(newSlotsRef, { occupied: newOccupied });
+    }
+
+    tx.update(bookingRef, {
+      date, startTime, endTime, slotCount, priceILS,
+      status: 'pending', updatedAt: Date.now(),
+    });
+  });
+
+  return { id, date, startTime, endTime, slotCount, priceILS, status: 'pending' };
 }
 
 export async function cancelBooking(id) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { AppContext } from './AppContext.js';
 import { useHashRoute } from './router.js';
 import { initData, IS_DEMO, getAppConfig, findFamilyByPhone } from './data/index.js';
@@ -20,10 +20,21 @@ export default function App() {
   const [config, setConfig] = useState(null);
   const [manifest, setManifest] = useState(null);
   const [family, setFamily] = useState(null);
+  const [editing, setEditing] = useState(null); // הזמנה שבעריכה (זרימת "עריכה")
   const [demoDismissed, setDemoDismissed] = useState(
     () => localStorage.getItem(DEMO_DISMISS_KEY) === '1'
   );
   const [path, navigate] = useHashRoute();
+
+  // עזיבת מסך ההזמנה (מעבר החוצה מ-/new) מנקה מצב עריכה (ביטול עריכה).
+  // משתמשים ב-ref כדי לזהות מעבר אמיתי, ולא לנקות כשה-path עדיין לא התעדכן
+  // מיד אחרי setEditing(...) שקורה לפני הניווט.
+  const prevPathRef = useRef(path);
+  useEffect(() => {
+    const prev = prevPathRef.current;
+    prevPathRef.current = path;
+    if (prev === '/new' && path !== '/new') setEditing(null);
+  }, [path]);
 
   useEffect(() => {
     (async () => {
@@ -73,7 +84,7 @@ export default function App() {
     );
   }
 
-  const ctx = { config, manifest, isDemo: IS_DEMO, family, setIdentity, clearIdentity };
+  const ctx = { config, manifest, isDemo: IS_DEMO, family, setIdentity, clearIdentity, editing, setEditing };
   const isRoni = path.startsWith('/roni');
 
   let screen;
