@@ -11,6 +11,7 @@ import {
   formatDateHe, DAY_NAMES_HE,
 } from '../utils/time.js';
 import { durationLabel, priceFor, shekel } from '../utils/format.js';
+import { sendApprovalEmail } from '../utils/email.js';
 
 export default function Roni({ navigate }) {
   const { config } = useApp();
@@ -43,7 +44,7 @@ function PinGate({ pin, onOk, onExit }) {
 
   return (
     <div className="screen no-nav center-col">
-      <div style={{ fontSize: 52, marginTop: 24 }}>🔑</div>
+      <div style={{ fontSize: 52, marginTop: 24 }}>💛</div>
       <h1>שלום רוני!</h1>
       <p>הזיני את הקוד הסודי שלך</p>
       <div className="pin-dots">
@@ -105,6 +106,10 @@ function RoniHome({ navigate }) {
   }
   async function approve(id) {
     await approveBooking(id);
+    // מייל אישור להורה (רק אם הוגדר שירות מייל ויש כתובת אצל המשפחה)
+    const b = (bookings || []).find((x) => x.id === id);
+    const fam = b && families[b.familyId];
+    if (b && fam) sendApprovalEmail({ ...b, status: 'approved' }, fam);
   }
 
   // רשימות אקשן ותג ההתראה — מכסים את כל התאריכים הקרובים (מהמנוי הרחב),

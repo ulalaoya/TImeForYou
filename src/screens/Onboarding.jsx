@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../AppContext.js';
 import { assetUrl, avatarUrl } from '../utils/assets.js';
 import { createFamily, findFamilyByPhone } from '../data/index.js';
-import { Toast } from '../components/common.jsx';
+import { Toast, CareTagline } from '../components/common.jsx';
 
 function validPhone(p) {
   const digits = String(p).replace(/\D/g, '');
@@ -40,7 +40,7 @@ function Welcome({ onRegister, onLogin }) {
   return (
     <div className="card" style={{ width: '100%' }}>
       <h2>ברוכים הבאים! 👋</h2>
-      <p>רוני שומרת על הילדים כשאתם בבית — כדי שיהיה לכם קצת זמן לעצמכם.</p>
+      <CareTagline large />
       <button className="btn block lg heart" onClick={onRegister} style={{ marginBottom: 12 }}>
         הרשמה וקביעת תור ✨
       </button>

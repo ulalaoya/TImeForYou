@@ -10,6 +10,7 @@ import {
 import { isActiveStatus } from '../utils/status.js';
 import { durationLabel, priceFor, shekel } from '../utils/format.js';
 import { bookingWaLink } from '../utils/whatsapp.js';
+import { googleCalUrl, downloadIcs } from '../utils/calendar.js';
 
 export default function NewBooking({ navigate }) {
   const { family, config, editing, setEditing } = useApp();
@@ -247,8 +248,7 @@ function Success({ created, family, config, navigate, onAgain }) {
   return (
     <div className="screen center-col">
       <div className="success-emoji">{edited ? '📝' : '⏳'}</div>
-      <h1 style={{ marginTop: 8 }}>{edited ? 'התור עודכן ונשלח לאישור ⏳' : 'הבקשה נשלחה! ⏳'}</h1>
-      <p>התור ממתין לאישור של רוני</p>
+      <h1 style={{ marginTop: 8 }}>{edited ? 'העדכון נשלח לרוני לאישור ⏳' : 'הבקשה נשלחה לרוני לאישור ⏳'}</h1>
       <p style={{ marginTop: -4 }}>יום {DAY_NAMES_HE[d.getDay()]}, {formatDateHe(d)}</p>
       <div className="card" style={{ width: '100%' }}>
         <div className="summary-row"><span className="k">שעות</span><span className="v"><TimeRange from={created.startTime} to={end} /></span></div>
@@ -260,7 +260,20 @@ function Success({ created, family, config, navigate, onAgain }) {
           בקשו מרוני לאשר בוואטסאפ 💬
         </a>
       )}
-      <button className="btn block heart" onClick={() => navigate('/my-bookings')}>לצפייה בהזמנות שלי</button>
+
+      <a className="btn block warm" href={googleCalUrl(created, family)} target="_blank" rel="noopener noreferrer">
+        הוספה ליומן 📅
+      </a>
+      <button className="link-btn" onClick={() => downloadIcs(created, family)} style={{ marginTop: 6 }}>
+        יומן אחר (Apple / Outlook)? הורדת קובץ
+      </button>
+      {!family.email && (
+        <p className="muted" style={{ fontSize: 12, marginTop: 6 }}>
+          טיפ: הוסיפו מייל בפרופיל כדי שהאירוע יגיע ישירות ליומן שלכם 📩
+        </p>
+      )}
+
+      <button className="btn block heart" style={{ marginTop: 10 }} onClick={() => navigate('/')}>לדף הבית ולתורים שלי</button>
       <div className="divider-btn">
         <button className="link-btn" onClick={onAgain}>הזמנת תור נוסף</button>
       </div>

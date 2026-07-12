@@ -2,9 +2,8 @@ import React from 'react';
 import { Icon } from './common.jsx';
 
 const ITEMS = [
-  { path: '/', label: 'בית', icon: 'nav-home' },
+  { path: '/', label: 'בית והתורים שלי', icon: 'nav-home' },
   { path: '/new', label: 'הזמנה חדשה', icon: 'nav-new-booking' },
-  { path: '/my-bookings', label: 'ההזמנות שלי', icon: 'nav-my-bookings' },
   { path: '/profile', label: 'פרופיל', icon: 'nav-profile' },
 ];
 

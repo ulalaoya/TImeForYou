@@ -8,7 +8,6 @@ import BottomNav from './components/BottomNav.jsx';
 import Onboarding from './screens/Onboarding.jsx';
 import Home from './screens/Home.jsx';
 import NewBooking from './screens/NewBooking.jsx';
-import MyBookings from './screens/MyBookings.jsx';
 import Profile from './screens/Profile.jsx';
 import Roni from './screens/Roni.jsx';
 
@@ -94,8 +93,6 @@ export default function App() {
     screen = <Onboarding />;
   } else if (path === '/new') {
     screen = <NewBooking navigate={navigate} />;
-  } else if (path === '/my-bookings') {
-    screen = <MyBookings navigate={navigate} />;
   } else if (path === '/profile') {
     screen = <Profile navigate={navigate} />;
   } else {

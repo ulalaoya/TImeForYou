@@ -59,6 +59,15 @@ export function TimeRange({ from, to }) {
   return <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>{from}–{to}</span>;
 }
 
+// משפט ההסבר, עם "כשאתם בבית" מודגש. large=פונט גדול יותר (למסך הכניסה)
+export function CareTagline({ large = false }) {
+  return (
+    <p className={`care-tagline ${large ? 'lg' : ''}`}>
+      רוני שומרת על הילדים <strong><u>כשאתם בבית</u></strong> — כדי שיהיה לכם קצת זמן לעצמכם.
+    </p>
+  );
+}
+
 // תגית סטטוס להזמנה: ממתין לאישור / מאושר
 export function StatusPill({ status }) {
   if (status === 'pending') return <span className="pill pending">ממתין לאישור ⏳</span>;
