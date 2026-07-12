@@ -1,0 +1,27 @@
+{
+  "name": "TimeForYou",
+  "short_name": "TimeForYou",
+  "description": "יומן להזמנת בייביסיטר של רוני — את רגועה, הם שמחים",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EAF7FF",
+  "theme_color": "#29B6F6",
+  "icons": [
+    {
+      "src": "./assets/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

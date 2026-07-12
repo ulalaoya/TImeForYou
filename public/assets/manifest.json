@@ -1,0 +1,134 @@
+{
+  "avatars": [
+    {
+      "id": "baby-1",
+      "file": "avatar-baby-1.png"
+    },
+    {
+      "id": "baby-2",
+      "file": "avatar-baby-2.png"
+    },
+    {
+      "id": "baby-3",
+      "file": "avatar-baby-3.png"
+    },
+    {
+      "id": "baby-4",
+      "file": "avatar-baby-4.png"
+    },
+    {
+      "id": "baby-5",
+      "file": "avatar-baby-5.png"
+    },
+    {
+      "id": "baby-6",
+      "file": "avatar-baby-6.png"
+    },
+    {
+      "id": "baby-7",
+      "file": "avatar-baby-7.png"
+    },
+    {
+      "id": "toddler-1",
+      "file": "avatar-toddler-1.png"
+    },
+    {
+      "id": "toddler-2",
+      "file": "avatar-toddler-2.png"
+    },
+    {
+      "id": "toddler-3",
+      "file": "avatar-toddler-3.png"
+    },
+    {
+      "id": "toddler-4",
+      "file": "avatar-toddler-4.png"
+    },
+    {
+      "id": "toddler-5",
+      "file": "avatar-toddler-5.png"
+    },
+    {
+      "id": "toddler-6",
+      "file": "avatar-toddler-6.png"
+    },
+    {
+      "id": "kid-1",
+      "file": "avatar-kid-1.png"
+    },
+    {
+      "id": "kid-2",
+      "file": "avatar-kid-2.png"
+    },
+    {
+      "id": "kid-3",
+      "file": "avatar-kid-3.png"
+    },
+    {
+      "id": "kid-4",
+      "file": "avatar-kid-4.png"
+    },
+    {
+      "id": "kid-5",
+      "file": "avatar-kid-5.png"
+    },
+    {
+      "id": "kid-6",
+      "file": "avatar-kid-6.png"
+    },
+    {
+      "id": "kid-7",
+      "file": "avatar-kid-7.png"
+    },
+    {
+      "id": "kid-8",
+      "file": "avatar-kid-8.png"
+    },
+    {
+      "id": "kid-9",
+      "file": "avatar-kid-9.png"
+    },
+    {
+      "id": "kid-10",
+      "file": "avatar-kid-10.png"
+    },
+    {
+      "id": "kid-11",
+      "file": "avatar-kid-11.png"
+    },
+    {
+      "id": "kid-12",
+      "file": "avatar-kid-12.png"
+    },
+    {
+      "id": "kid-13",
+      "file": "avatar-kid-13.png"
+    },
+    {
+      "id": "kid-14",
+      "file": "avatar-kid-14.png"
+    }
+  ],
+  "icons": {
+    "calendar": "icon-calendar.png",
+    "clock": "icon-clock.png",
+    "approved": "icon-approved.png",
+    "saved-time": "icon-saved-time.png",
+    "request": "icon-request.png",
+    "morning": "icon-morning.png",
+    "noon": "icon-noon.png",
+    "evening": "icon-evening.png",
+    "night": "icon-night.png",
+    "babysitter": "icon-babysitter.png",
+    "parents": "icon-parents.png",
+    "child": "icon-child.png",
+    "messages": "icon-messages.png",
+    "heart": "icon-heart.png",
+    "shield": "icon-shield.png",
+    "house-heart": "icon-house-heart.png",
+    "teddy": "icon-teddy.png",
+    "blocks": "icon-blocks.png",
+    "ball": "icon-ball.png",
+    "puzzle": "icon-puzzle.png"
+  }
+}
