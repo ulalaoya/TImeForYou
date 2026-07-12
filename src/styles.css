@@ -375,7 +375,7 @@ p { margin: 0 0 10px; color: var(--text-soft); line-height: 1.55; }
 .pin-dot.on { background: var(--sky); }
 .pin-dot.err { background: var(--danger); animation: shake 0.3s; }
 @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
-.numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 260px; margin: 0 auto; }
+.numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 260px; margin: 0 auto; direction: ltr; }
 .numkey {
   aspect-ratio: 1.4; border-radius: 16px; border: none; background: #fff;
   box-shadow: var(--shadow-soft); font-size: 24px; font-weight: 700; color: var(--text);
