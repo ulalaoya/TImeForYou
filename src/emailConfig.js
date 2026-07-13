@@ -13,7 +13,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const emailConfig = {
-  serviceId: '',
-  templateId: '',
-  publicKey: '',
+  serviceId: 'service_v1q535u',
+  templateId: 'template_c8evxhm',
+  publicKey: 'a86g7tgKCdUI4QN_7',
 };
