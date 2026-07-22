@@ -16,17 +16,30 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 export async function getAppConfig() {
+  let cfg = { ...DEFAULT_APP_CONFIG };
   try {
     const snap = await getDoc(doc(db, 'config', 'app'));
-    if (snap.exists()) return { ...DEFAULT_APP_CONFIG, ...snap.data() };
+    if (snap.exists()) cfg = { ...cfg, ...snap.data() };
   } catch (e) { /* fall through to defaults */ }
-  return { ...DEFAULT_APP_CONFIG };
+  // החסימות של רוני נשמרות במסמך נפרד (config/blocks) כדי שאפשר יהיה לפתוח
+  // אותו לכתיבה בלי לפתוח את ה-PIN/המחיר שב-config/app.
+  try {
+    const bsnap = await getDoc(doc(db, 'config', 'blocks'));
+    if (bsnap.exists() && Array.isArray(bsnap.data().blocks)) cfg.blocks = bsnap.data().blocks;
+  } catch (e) { /* fall through — no blocks doc yet */ }
+  return cfg;
 }
 
-// עדכון תצורת האפליקציה (למשל חסימות של רוני). כתיבה עם merge כדי לא לדרוס
-// שדות אחרים, ואז החזרת התצורה המלאה המעודכנת.
+// עדכון תצורת האפליקציה. שדה `blocks` (חסימות של רוני) נכתב למסמך config/blocks;
+// שאר השדות ל-config/app. כתיבה עם merge, ואז החזרת התצורה המלאה המעודכנת.
 export async function updateAppConfig(patch) {
-  await setDoc(doc(db, 'config', 'app'), patch, { merge: true });
+  const { blocks, ...rest } = patch;
+  if (blocks !== undefined) {
+    await setDoc(doc(db, 'config', 'blocks'), { blocks }, { merge: true });
+  }
+  if (Object.keys(rest).length) {
+    await setDoc(doc(db, 'config', 'app'), rest, { merge: true });
+  }
   return getAppConfig();
 }
 

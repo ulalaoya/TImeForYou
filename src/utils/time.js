@@ -84,19 +84,26 @@ export function isDateBlocked(isoDate, config) {
   return ranges.some((r) => isoDate >= r.from && isoDate <= r.to);
 }
 
-// חסימות ידניות של רוני — ימים/שעות שבהן אינה זמינה. כל חסימה:
-//   { id, date:'YYYY-MM-DD', allDay:true }                     — יום שלם
-//   { id, date:'YYYY-MM-DD', start:'HH:mm', end:'HH:mm' }      — טווח שעות באותו יום
-// יום שלם חסום (חסימה ידנית מסוג allDay)
+// חסימות ידניות של רוני — טווחי תאריכים (ימים שלמים) או טווחי שעות שבהם אינה זמינה.
+// כל חסימה מכסה טווח תאריכים from..to (כולל הקצוות); יום בודד = from===to.
+//   { id, from:'YYYY-MM-DD', to:'YYYY-MM-DD', allDay:true }                 — ימים שלמים
+//   { id, from:'YYYY-MM-DD', to:'YYYY-MM-DD', start:'HH:mm', end:'HH:mm' }  — טווח שעות בכל יום בטווח
+// תאימות לאחור: חסימות ישנות עם שדה `date` בודד עדיין נתמכות.
+const blockFrom = (bl) => bl.from || bl.date;
+const blockTo = (bl) => bl.to || bl.from || bl.date;
+
+// יום שלם חסום (חסימה ידנית מסוג allDay שנופלת על התאריך)
 export function isDayManuallyBlocked(isoDate, config) {
-  return (config?.blocks || []).some((bl) => bl.date === isoDate && bl.allDay);
+  return (config?.blocks || []).some(
+    (bl) => bl.allDay && isoDate >= blockFrom(bl) && isoDate <= blockTo(bl)
+  );
 }
 
 // האם משבצת (יום+שעה) חסומה ע"י חסימה ידנית של רוני
 export function isSlotBlocked(isoDate, time, config) {
   const tMin = timeToMin(time);
   return (config?.blocks || []).some((bl) => {
-    if (bl.date !== isoDate) return false;
+    if (isoDate < blockFrom(bl) || isoDate > blockTo(bl)) return false;
     if (bl.allDay) return true;
     return tMin >= timeToMin(bl.start) && tMin + SLOT_MINUTES <= timeToMin(bl.end);
   });

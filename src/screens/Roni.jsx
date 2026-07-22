@@ -181,41 +181,46 @@ function RoniBlocks({ now }) {
   const todayISO = toISODate(now);
   const times = useMemo(() => dayBoundaryTimes(config), [config]);
 
-  const [date, setDate] = useState(todayISO);
+  const [from, setFrom] = useState(todayISO);
+  const [to, setTo] = useState(todayISO);
   const [mode, setMode] = useState('allDay'); // allDay | range
   const [start, setStart] = useState(config.regularHours.start);
   const [end, setEnd] = useState(config.regularHours.end);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
-  // חסימות עתידיות (מהיום והלאה), ממוינות לפי תאריך ואז שעה
+  // חסימות שלא הסתיימו (תאריך הסיום מהיום והלאה), ממוינות לפי תאריך ההתחלה ואז שעה
   const upcoming = useMemo(() => {
+    const f = (bl) => bl.from || bl.date;
+    const t = (bl) => bl.to || bl.from || bl.date;
     return blocks
-      .filter((bl) => bl.date >= todayISO)
-      .sort((a, b) => (a.date + (a.start || '')).localeCompare(b.date + (b.start || '')));
+      .filter((bl) => t(bl) >= todayISO)
+      .sort((a, b) => (f(a) + (a.start || '')).localeCompare(f(b) + (b.start || '')));
   }, [blocks, todayISO]);
 
   async function addBlock() {
     setErr('');
-    if (!date) { setErr('בחרי תאריך'); return; }
+    if (!from || !to) { setErr('בחרי תאריך'); return; }
+    if (to < from) { setErr('תאריך הסיום חייב להיות אחרי או שווה לתאריך ההתחלה'); return; }
     let block;
     if (mode === 'allDay') {
-      block = { id: uid(), date, allDay: true };
+      block = { id: uid(), from, to, allDay: true };
     } else {
       if (timeToMin(end) <= timeToMin(start)) { setErr('שעת הסיום חייבת להיות אחרי שעת ההתחלה'); return; }
-      block = { id: uid(), date, start, end };
+      block = { id: uid(), from, to, start, end };
     }
     setBusy(true);
     try {
       await updateConfig({ blocks: [...blocks, block] });
     } catch (e) {
-      setErr('אופס, השמירה נכשלה. נסי שוב');
+      setErr('אופס, השמירה נכשלה. בדקי חיבור לאינטרנט ונסי שוב');
     } finally {
       setBusy(false);
     }
   }
 
   async function removeBlock(id) {
+    setErr('');
     setBusy(true);
     try {
       await updateConfig({ blocks: blocks.filter((bl) => bl.id !== id) });
@@ -230,15 +235,23 @@ function RoniBlocks({ now }) {
     <div>
       <p className="muted" style={{ fontSize: 13, marginTop: 6 }}>
         סמני ימים שלמים או טווחי שעות שבהם את לא זמינה — המשבצות ייחסמו וההורים לא יוכלו להזמין אותן.
+        אפשר לחסום יום בודד או טווח של כמה ימים.
       </p>
 
       <div className="card">
-        <div className="field">
-          <label htmlFor="blk-date">תאריך</label>
-          <input id="blk-date" type="date" value={date} min={todayISO} onChange={(e) => setDate(e.target.value)} />
+        <div style={{ display: 'flex', gap: 10 }}>
+          <div className="field" style={{ flex: 1, marginBottom: 0 }}>
+            <label htmlFor="blk-from">מתאריך</label>
+            <input id="blk-from" type="date" value={from} min={todayISO}
+              onChange={(e) => { setFrom(e.target.value); if (to < e.target.value) setTo(e.target.value); }} />
+          </div>
+          <div className="field" style={{ flex: 1, marginBottom: 0 }}>
+            <label htmlFor="blk-to">עד תאריך</label>
+            <input id="blk-to" type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} />
+          </div>
         </div>
 
-        <div className="seg">
+        <div className="seg" style={{ marginTop: 12 }}>
           <button className={`seg-btn ${mode === 'allDay' ? 'active' : ''}`} onClick={() => setMode('allDay')}>
             יום שלם
           </button>
@@ -273,29 +286,36 @@ function RoniBlocks({ now }) {
 
       <h3 style={{ marginTop: 20 }}>חסימות קרובות ({upcoming.length})</h3>
       {upcoming.length === 0 && <p className="muted">אין חסימות מתוכננות.</p>}
-      {upcoming.map((bl) => {
-        const d = fromISODate(bl.date);
-        return (
-          <div key={bl.id} className="card" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-            <div style={{ fontSize: 22 }}>🚫</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 700 }}>יום {DAY_NAMES_HE[d.getDay()]}, {formatDateHe(d)}</div>
-              <div style={{ fontSize: 13, color: 'var(--text-soft)' }}>
-                {bl.allDay
-                  ? 'כל היום'
-                  : <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>{bl.start}–{bl.end}</span>}
-              </div>
+      {upcoming.map((bl) => (
+        <div key={bl.id} className="card" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+          <div style={{ fontSize: 22 }}>🚫</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700 }}>{blockDateLabel(bl)}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-soft)' }}>
+              {bl.allDay
+                ? 'כל היום'
+                : <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>{bl.start}–{bl.end}</span>}
             </div>
-            <button className="btn sm ghost" disabled={busy} onClick={() => removeBlock(bl.id)}>הסרה</button>
           </div>
-        );
-      })}
+          <button className="btn sm ghost" disabled={busy} onClick={() => removeBlock(bl.id)}>הסרה</button>
+        </div>
+      ))}
 
       <p className="muted" style={{ fontSize: 12, marginTop: 14 }}>
         שימי לב: חסימה מונעת הזמנות חדשות בלבד. הזמנות שכבר אושרו באותו זמן ימשיכו להופיע ביומן.
       </p>
     </div>
   );
+}
+
+// תיאור טווח התאריכים של חסימה (יום בודד או טווח)
+function blockDateLabel(bl) {
+  const from = bl.from || bl.date;
+  const to = bl.to || bl.from || bl.date;
+  const df = fromISODate(from);
+  if (from === to) return `יום ${DAY_NAMES_HE[df.getDay()]}, ${formatDateHe(df)}`;
+  const dt = fromISODate(to);
+  return `${formatDateHe(df)} – ${formatDateHe(dt)}`;
 }
 
 function uid() {
