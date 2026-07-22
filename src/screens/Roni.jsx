@@ -8,7 +8,7 @@ import {
 } from '../data/index.js';
 import {
   defaultWeekStart, weekDaysSunThu, toISODate, addDays, fromISODate,
-  formatDateHe, DAY_NAMES_HE,
+  formatDateHe, DAY_NAMES_HE, dayBoundaryTimes, timeToMin,
 } from '../utils/time.js';
 import { durationLabel, priceFor, shekel } from '../utils/format.js';
 import { sendApprovalEmail } from '../utils/email.js';
@@ -139,6 +139,9 @@ function RoniHome({ navigate }) {
           הזמנות
           {badge > 0 && <span className="nav-badge">{badge}</span>}
         </button>
+        <button className={`roni-tab ${tab === 'blocks' ? 'active' : ''}`} onClick={() => setTab('blocks')}>
+          חסימות
+        </button>
       </div>
 
       {bookings === null && <Spinner />}
@@ -165,8 +168,138 @@ function RoniHome({ navigate }) {
           pendingCancels={pendingCancels} pendingApprovals={pendingApprovals}
           onSeen={seen} onApprove={approve} />
       )}
+
+      {tab === 'blocks' && <RoniBlocks now={now} />}
     </div>
   );
+}
+
+// ── ניהול חסימות — ימים/שעות שרוני אינה זמינה ──────────────────────────────────
+function RoniBlocks({ now }) {
+  const { config, updateConfig } = useApp();
+  const blocks = config.blocks || [];
+  const todayISO = toISODate(now);
+  const times = useMemo(() => dayBoundaryTimes(config), [config]);
+
+  const [date, setDate] = useState(todayISO);
+  const [mode, setMode] = useState('allDay'); // allDay | range
+  const [start, setStart] = useState(config.regularHours.start);
+  const [end, setEnd] = useState(config.regularHours.end);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  // חסימות עתידיות (מהיום והלאה), ממוינות לפי תאריך ואז שעה
+  const upcoming = useMemo(() => {
+    return blocks
+      .filter((bl) => bl.date >= todayISO)
+      .sort((a, b) => (a.date + (a.start || '')).localeCompare(b.date + (b.start || '')));
+  }, [blocks, todayISO]);
+
+  async function addBlock() {
+    setErr('');
+    if (!date) { setErr('בחרי תאריך'); return; }
+    let block;
+    if (mode === 'allDay') {
+      block = { id: uid(), date, allDay: true };
+    } else {
+      if (timeToMin(end) <= timeToMin(start)) { setErr('שעת הסיום חייבת להיות אחרי שעת ההתחלה'); return; }
+      block = { id: uid(), date, start, end };
+    }
+    setBusy(true);
+    try {
+      await updateConfig({ blocks: [...blocks, block] });
+    } catch (e) {
+      setErr('אופס, השמירה נכשלה. נסי שוב');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function removeBlock(id) {
+    setBusy(true);
+    try {
+      await updateConfig({ blocks: blocks.filter((bl) => bl.id !== id) });
+    } catch (e) {
+      setErr('אופס, ההסרה נכשלה. נסי שוב');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div>
+      <p className="muted" style={{ fontSize: 13, marginTop: 6 }}>
+        סמני ימים שלמים או טווחי שעות שבהם את לא זמינה — המשבצות ייחסמו וההורים לא יוכלו להזמין אותן.
+      </p>
+
+      <div className="card">
+        <div className="field">
+          <label htmlFor="blk-date">תאריך</label>
+          <input id="blk-date" type="date" value={date} min={todayISO} onChange={(e) => setDate(e.target.value)} />
+        </div>
+
+        <div className="seg">
+          <button className={`seg-btn ${mode === 'allDay' ? 'active' : ''}`} onClick={() => setMode('allDay')}>
+            יום שלם
+          </button>
+          <button className={`seg-btn ${mode === 'range' ? 'active' : ''}`} onClick={() => setMode('range')}>
+            טווח שעות
+          </button>
+        </div>
+
+        {mode === 'range' && (
+          <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+            <div className="field" style={{ flex: 1, marginBottom: 0 }}>
+              <label htmlFor="blk-start">מ־</label>
+              <select id="blk-start" value={start} onChange={(e) => setStart(e.target.value)}>
+                {times.slice(0, -1).map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div className="field" style={{ flex: 1, marginBottom: 0 }}>
+              <label htmlFor="blk-end">עד</label>
+              <select id="blk-end" value={end} onChange={(e) => setEnd(e.target.value)}>
+                {times.slice(1).map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {err && <p style={{ color: 'var(--danger)', fontSize: 13, marginTop: 8 }}>{err}</p>}
+
+        <button className="btn block green" style={{ marginTop: 14 }} disabled={busy} onClick={addBlock}>
+          {busy ? 'שומרים…' : 'הוספת חסימה 🚫'}
+        </button>
+      </div>
+
+      <h3 style={{ marginTop: 20 }}>חסימות קרובות ({upcoming.length})</h3>
+      {upcoming.length === 0 && <p className="muted">אין חסימות מתוכננות.</p>}
+      {upcoming.map((bl) => {
+        const d = fromISODate(bl.date);
+        return (
+          <div key={bl.id} className="card" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <div style={{ fontSize: 22 }}>🚫</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700 }}>יום {DAY_NAMES_HE[d.getDay()]}, {formatDateHe(d)}</div>
+              <div style={{ fontSize: 13, color: 'var(--text-soft)' }}>
+                {bl.allDay
+                  ? 'כל היום'
+                  : <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>{bl.start}–{bl.end}</span>}
+              </div>
+            </div>
+            <button className="btn sm ghost" disabled={busy} onClick={() => removeBlock(bl.id)}>הסרה</button>
+          </div>
+        );
+      })}
+
+      <p className="muted" style={{ fontSize: 12, marginTop: 14 }}>
+        שימי לב: חסימה מונעת הזמנות חדשות בלבד. הזמנות שכבר אושרו באותו זמן ימשיכו להופיע ביומן.
+      </p>
+    </div>
+  );
+}
+
+function uid() {
+  return `blk_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
 }
 
 function RoniList({ bookings, families, config, now, pendingCancels, pendingApprovals, onSeen, onApprove }) {

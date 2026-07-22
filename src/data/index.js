@@ -14,6 +14,7 @@ export async function initData() {
 }
 
 export const getAppConfig = (...a) => adapter.getAppConfig(...a);
+export const updateAppConfig = (...a) => adapter.updateAppConfig(...a);
 export const findFamilyByPhone = (...a) => adapter.findFamilyByPhone(...a);
 export const getFamilyById = (...a) => adapter.getFamilyById(...a);
 export const createFamily = (...a) => adapter.createFamily(...a);

@@ -173,6 +173,32 @@ p { margin: 0 0 10px; color: var(--text-soft); line-height: 1.55; }
 }
 .field .err { color: var(--danger); font-size: 13px; margin-top: 5px; }
 .field textarea { min-height: 72px; resize: vertical; }
+.field select {
+  width: 100%;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 16px;
+  background: #fbfdff;
+  color: var(--text);
+}
+.field select:focus { outline: none; border-color: var(--sky); }
+
+/* ── Segmented control (בורר יום-שלם / טווח-שעות) ──────────────────── */
+.seg { display: flex; gap: 8px; }
+.seg-btn {
+  flex: 1;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fbfdff;
+  padding: 10px 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.seg-btn.active { background: var(--sky); border-color: var(--sky); color: #fff; }
 
 /* ── Avatars ────────────────────────────────────────────────────── */
 .avatar {

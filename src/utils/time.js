@@ -84,6 +84,33 @@ export function isDateBlocked(isoDate, config) {
   return ranges.some((r) => isoDate >= r.from && isoDate <= r.to);
 }
 
+// חסימות ידניות של רוני — ימים/שעות שבהן אינה זמינה. כל חסימה:
+//   { id, date:'YYYY-MM-DD', allDay:true }                     — יום שלם
+//   { id, date:'YYYY-MM-DD', start:'HH:mm', end:'HH:mm' }      — טווח שעות באותו יום
+// יום שלם חסום (חסימה ידנית מסוג allDay)
+export function isDayManuallyBlocked(isoDate, config) {
+  return (config?.blocks || []).some((bl) => bl.date === isoDate && bl.allDay);
+}
+
+// האם משבצת (יום+שעה) חסומה ע"י חסימה ידנית של רוני
+export function isSlotBlocked(isoDate, time, config) {
+  const tMin = timeToMin(time);
+  return (config?.blocks || []).some((bl) => {
+    if (bl.date !== isoDate) return false;
+    if (bl.allDay) return true;
+    return tMin >= timeToMin(bl.start) && tMin + SLOT_MINUTES <= timeToMin(bl.end);
+  });
+}
+
+// כל שעות הגבול של היום (כולל שעת הסיום) — לבחירה בטפסים, למשל 08:00..16:00
+export function dayBoundaryTimes(config) {
+  const start = timeToMin(config.regularHours.start);
+  const end = timeToMin(config.regularHours.end);
+  const out = [];
+  for (let m = start; m <= end; m += SLOT_MINUTES) out.push(minToTime(m));
+  return out;
+}
+
 // שעות הפעילות הזמינות ליום נתון: {start, end}
 export function bookableHoursFor(isoDate, config) {
   const sp = specialPeriodFor(isoDate, config);
@@ -112,6 +139,9 @@ export function slotState(isoDate, time, config, now = new Date()) {
 
   // יום חסום לחלוטין — כל המשבצות נעולות
   if (isDateBlocked(isoDate, config)) return { locked: true, past };
+
+  // חסימה ידנית של רוני — יום שלם או טווח שעות שסומן כלא-זמין
+  if (isSlotBlocked(isoDate, time, config)) return { locked: true, past };
 
   const hours = bookableHoursFor(isoDate, config);
   const startMin = timeToMin(hours.start);

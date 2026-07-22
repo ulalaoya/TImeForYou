@@ -43,6 +43,15 @@ export async function getAppConfig() {
   return { ...DEFAULT_APP_CONFIG, ...(store.config || {}) };
 }
 
+// עדכון תצורת האפליקציה (למשל חסימות של רוני). מחזיר את התצורה המלאה המעודכנת.
+export async function updateAppConfig(patch) {
+  const store = load();
+  store.config = { ...(store.config || {}), ...patch };
+  save(store);
+  notifyAll();
+  return { ...DEFAULT_APP_CONFIG, ...store.config };
+}
+
 export async function findFamilyByPhone(phone) {
   const store = load();
   const norm = normalizePhone(phone);

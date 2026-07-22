@@ -23,6 +23,13 @@ export async function getAppConfig() {
   return { ...DEFAULT_APP_CONFIG };
 }
 
+// עדכון תצורת האפליקציה (למשל חסימות של רוני). כתיבה עם merge כדי לא לדרוס
+// שדות אחרים, ואז החזרת התצורה המלאה המעודכנת.
+export async function updateAppConfig(patch) {
+  await setDoc(doc(db, 'config', 'app'), patch, { merge: true });
+  return getAppConfig();
+}
+
 export async function findFamilyByPhone(phone) {
   const norm = normalizePhone(phone);
   if (!norm) return null;

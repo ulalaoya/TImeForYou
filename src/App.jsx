@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { AppContext } from './AppContext.js';
 import { useHashRoute } from './router.js';
-import { initData, IS_DEMO, getAppConfig, findFamilyByPhone } from './data/index.js';
+import { initData, IS_DEMO, getAppConfig, updateAppConfig, findFamilyByPhone } from './data/index.js';
 import { loadManifest, assetUrl } from './utils/assets.js';
 import { Spinner } from './components/common.jsx';
 import BottomNav from './components/BottomNav.jsx';
@@ -67,6 +67,14 @@ export default function App() {
     navigate('/');
   }, [navigate]);
 
+  // עדכון תצורה (חסימות של רוני) — כותב לשכבת הנתונים ומרענן את ה-state המקומי
+  // כדי שהיומן (של רוני ושל ההורים) ישקף את השינוי מיד.
+  const updateConfig = useCallback(async (patch) => {
+    const next = await updateAppConfig(patch);
+    setConfig(next);
+    return next;
+  }, []);
+
   const dismissDemo = () => {
     localStorage.setItem(DEMO_DISMISS_KEY, '1');
     setDemoDismissed(true);
@@ -83,7 +91,7 @@ export default function App() {
     );
   }
 
-  const ctx = { config, manifest, isDemo: IS_DEMO, family, setIdentity, clearIdentity, editing, setEditing };
+  const ctx = { config, manifest, isDemo: IS_DEMO, family, setIdentity, clearIdentity, editing, setEditing, updateConfig };
   const isRoni = path.startsWith('/roni');
 
   let screen;
